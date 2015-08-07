@@ -2,12 +2,12 @@
 
 ## Contents
 
-1. [Introduction](#-intro)
-2. [Database Table Schemas](#-dts)
-3. [Important Functions and Stored Procedures](#-functions)
-4. [Database Installation Guide](#-installation)
-5. [Additional Scripts](#-scripts)
-6. [Glossary](#-glossary)
+1. [Introduction](#intro)
+2. [Database Table Schemas](#dts)
+3. [Important Functions and Stored Procedures](#functions)
+4. [Database Installation Guide](#installation)
+5. [Additional Scripts](#scripts)
+6. [Glossary](#glossary)
 
 ## <a name="intro"></a> Introduction
 
@@ -39,7 +39,7 @@ This database script has been tested with both SQL Server 2014 Express Edition a
 ### <a name="scripts"></a>Additional Scripts
 - The script **‘IATIv201 – Main Data Population Function.sql’** is used to create the p_populate function, which is described earlier in this document. As this stored procedure is tightly coupled to DFID’s DataMart, it has been removed from the ‘IATIv201 – Create Database Script.sql’ script. However, as its functionality has been broken down into discrete SQL blocks, which have all been commented, it is a useful guide to show how DFID approaches the extraction and transformation of data from our DataMart. 
 
-- The script **‘IATIv201 – Views on the DFID Database.sql’** – these views are tightly bound to DFID’s Datamart and so cannot be created, but they may prove informative as they show what data is being extracted.
+- **‘IATIv201 – Views on the DFID Database.sql’** – these views are tightly bound to DFID’s Datamart and so cannot be created, but they may prove informative as they show what data is being extracted.
 
 ## <a name="glossary"></a>Glossary
 
