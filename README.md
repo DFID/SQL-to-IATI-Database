@@ -45,7 +45,8 @@ This database script has been tested with both SQL Server 2014 Express Edition a
 
 There are some table/column names in the Database’s “PublicationControl” schema which relate to DFID specific terminology; these will be outlined below to avoid confusion:
 
-- __Quest__ - This is the name of DFID’s document repository. A document’s Quest Number is its unique reference within this system.
+- __Vault__ - This is the name of DFID’s document repository. A document’s Vault Number is its unique reference within this system.
+- __Quest__ - This is the name of DFID’s legacy document repository. A document’s Quest Number is its unique reference within this system.
 - __Project__ - This is the name that is used within DFID to describe hierarchy one iati-activities.
 - __Component__ - This is the name that is used within DFID to describe hierarchy two iati-activities. 
 - __ARIES__ - This is the name of DFID’s Enterprise Resource Planner system, 
