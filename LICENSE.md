@@ -1,5 +1,6 @@
-The MIT License (MIT)
-Copyright (c) 2015 Department for International Development
+MIT License
+
+Copyright (c) 2018 Crown Copyright (Department for International Development)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
