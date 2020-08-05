@@ -25,7 +25,7 @@ The Database contains four schemas and the tables within each schema perform a p
 
 ## <a name="functions"></a>Important Functions and Stored Procedures
 
-- __[IATISchema].[p_Populate]__ - This stored procedure is the main driver of the data generation process within the database. It extracts DFID’s financial information from a DataMart that is linked to the organisation’s Enterprise Resource Planning system and transforms it, using the data in the Codelist and PublicationControl tables, before saving DFID’s IATI data into the IATISchema tables.
+- __[IATISchema].[p_Populate]__ - This stored procedure is the main driver of the data generation process within the database. It extracts DFID’s financial information from a DataMart that is linked to the organisation’s Enterprise Resource Planning system and transforms it, using the data in the Codelist and PublicationControl tables, before saving DFID’s IATI data into the IATISchema tables. Please note: some passages of p_populate that are very specific to the source finance system have been removed from the publicly accessible code.
 
 - __[IATISchema].[f_activitiesXMLFile_203]__ -  This function is used to return valid IATI 2.03 XML data from the IATI Schema database tables. The function takes in a number of different parameters to control what is contained in the returned XML; this is explained further in the documentation associated with the stored procedure. To view this information, right click on the function and select: Script function as -> Create to -> New Query Editor Window
 
@@ -55,20 +55,3 @@ There are some table/column names in the Database’s “PublicationControl” s
 - __Project__ - This is the name that is used within DFID to describe hierarchy one iati-activities.
 - __Component__ - This is the name that is used within DFID to describe hierarchy two iati-activities. 
 - __ARIES__ - This is the name of DFID’s Enterprise Resource Planner system, a project’s ARIES ID is effectively a hierarchy one iati-activity ID.
-
-## <a name="legacy"></a>Legacy IATI 2.01 Database
-
-It is **strongly recommended** that you implement the latest **IATIv203 database**.
-We have maintained the IATIv201 scripts in this GitHub repository to support users who have previously downloaded and used this code.
-The IATIv201 database was created using SQL server and was used by DFID to generate IATI 2.01 standard data in the XML file format.
-This database script has been tested with both SQL Server 2014 Express Edition and SQL Server 2012 Developer Edition. You will need administrator access to both SQL Server and the database server in order to install the database successfully.
-
-- Log on to the database server and create a folder called ‘IATIv201’ on the C: drive (e.g. C:\ IATIv201).
-
-- Open SQL Server Management Studio and run the script ‘IATIv201 – Create Database Script.sql’ to create the database and an associated login.
-
-## Additional Scripts
-
-- The script **IATIv201 – Main Data Population Function.sql** is used to create the p_populate function, which is described earlier in this document. As this stored procedure is tightly coupled to DFID’s DataMart, it has been removed from the ‘IATIv201 – Create Database Script.sql’ script. However, as its functionality has been broken down into discrete SQL blocks, which have all been commented, it is a useful guide to show how DFID approaches the extraction and transformation of data from our DataMart.
-
-- **IATIv201 – Views on the DFID Database.sql** – these views are tightly bound to DFID’s Datamart and so cannot be created, but they may prove informative as they show what data is being extracted.
