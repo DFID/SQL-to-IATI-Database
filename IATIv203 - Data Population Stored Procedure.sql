@@ -1,13 +1,17 @@
 USE [IATIv203]
 GO
 
-/****** Object:  StoredProcedure [PublicationControl].[p_Populate]    Script Date: 05/09/2018 10:37:35 ******/
+/****** Object:  StoredProcedure [PublicationControl].[p_Populate]    Script Date: 15/03/2020 10:53:04 ******/
 SET ANSI_NULLS ON
 GO
+
 SET QUOTED_IDENTIFIER ON
 GO
 
---DROP PROCEDURE [PublicationControl].[p_Populate]
+
+
+
+
 
 CREATE PROCEDURE [PublicationControl].[p_Populate]
 (
@@ -19,35 +23,37 @@ CREATE PROCEDURE [PublicationControl].[p_Populate]
 AS
 --*/
        -- Uncomment these declarations if you want to run this routine as a script and not a procedure
-       DECLARE @ExportedFlagInternal                    Configuration.Flag
-       DECLARE @VersionIdInternal                       Configuration.Version
-       DECLARE @PivotDaysInternal						INT
-       DECLARE @LatestTransactionDateInternal			DATETIME
+       DECLARE @ExportedFlagInternal                   Configuration.Flag
+       DECLARE @VersionIdInternal                      Configuration.Version
+       DECLARE @PivotDaysInternal                      INT
+       DECLARE @LatestTransactionDateInternal      DATETIME
        
        SET @ExportedFlagInternal                = @ExportedFlag
        SET @VersionIdInternal                          = @VersionId
        SET @PivotDaysInternal                          = @PivotDays
        SET @LatestTransactionDateInternal = @LatestTransactionDate
        
-       DECLARE       @ActivitiesId                            INT                               
-       DECLARE       @DFIDProjectIdentifier                   NVARCHAR(4)   
-       DECLARE       @DFIDOrganisationIdentifier       NVARCHAR(8)   
-       DECLARE       @DFIDOrganisationName                    NVARCHAR(4)   
-       DECLARE       @EarliestTransactionDate          DATETIME                   
-       DECLARE       @MinimumTransactionAmount         INT                               
-       DECLARE       @ComponentSource                         SYSNAME                           
-       DECLARE       @DocumentSource                                 SYSNAME                           
-       DECLARE		 @DocumentURIPrefix                      NVARCHAR(MAX)
+       DECLARE       @ActivitiesId                              INT                               
+       DECLARE       @DFIDProjectIdentifier                     NVARCHAR(4)   
+       DECLARE       @DFIDOrganisationIdentifier                NVARCHAR(8)
+     DECLARE       @DFIDOrganisationType                    NVARCHAR(2)     
+       DECLARE       @DFIDOrganisationName                      NVARCHAR(60)   
+       DECLARE       @EarliestTransactionDate                   DATETIME                   
+       DECLARE       @MinimumTransactionAmount                  INT                               
+       DECLARE       @ComponentSource                           SYSNAME                           
+       DECLARE       @DocumentSource                            SYSNAME                           
+       DECLARE       @DocumentURIPrefix                         NVARCHAR(MAX)
 
-       SET @ActivitiesId                                      = 101
+       SET @ActivitiesId                               = 101
        SET @DFIDProjectIdentifier                      = N'GB-1'
        SET @DFIDOrganisationIdentifier                 = N'GB-GOV-1'
-       SET @DFIDOrganisationName                       = N'DFID'
+     SET @DFIDOrganisationType             = N'10'
+       SET @DFIDOrganisationName                       = N'UK - Department for International Development (DFID)'
        SET @EarliestTransactionDate                    = '20100512'
        SET @MinimumTransactionAmount                   = 500
        SET @ComponentSource                            = NULL
-       SET @DocumentSource                                    = NULL
-       SET @DocumentURIPrefix                                 = N'http://iati.dfid.gov.uk/iati_documents/'
+       SET @DocumentSource                             = NULL
+       SET @DocumentURIPrefix                          = N'http://iati.dfid.gov.uk/iati_documents/'
        SET @ExportedFlagInternal = ISNULL(@ExportedFlagInternal, 'N')
        /* this allows the script to run without being part of the stored procedure if necessary, 
        * also the routine will not work if a NULL value is passed in the @PivotDaysInternal parameter*/
@@ -125,106 +131,106 @@ AS
       BEGIN TRANSACTION
 
        BEGIN TRY
-				/* Clearing down IATISchema tables before re-populating them */
-				DELETE FROM [IATISchema].[activity-date]
-				DELETE FROM [IATISchema].[budget]
-				DELETE FROM [IATISchema].[capital-spend]
-				DELETE FROM [IATISchema].[collaboration-type]
-				DELETE FROM [IATISchema].[conditions]
-				DELETE FROM [IATISchema].[conditions/condition]
-				DELETE FROM [IATISchema].[contact-info]
-				DELETE FROM [IATISchema].[contact-info/details]
-				DELETE FROM [IATISchema].[country-budget-items]
-				DELETE FROM [IATISchema].[country-budget-items/budget-item]
-				DELETE FROM [IATISchema].[crs-add]
-				DELETE FROM [IATISchema].[crs-add/channel-code]
-				DELETE FROM [IATISchema].[crs-add/loan-status]
-				DELETE FROM [IATISchema].[crs-add/loan-status/interest-arrears]
-				DELETE FROM [IATISchema].[crs-add/loan-status/interest-received]
-				DELETE FROM [IATISchema].[crs-add/loan-status/principal-arrears]
-				DELETE FROM [IATISchema].[crs-add/loan-status/principal-outstanding]
-				DELETE FROM [IATISchema].[crs-add/loan-terms]
-				DELETE FROM [IATISchema].[crs-add/loan-terms/commitment-date]
-				DELETE FROM [IATISchema].[crs-add/loan-terms/repayment-final-date]
-				DELETE FROM [IATISchema].[crs-add/loan-terms/repayment-first-date]
-				DELETE FROM [IATISchema].[crs-add/loan-terms/repayment-plan]
-				DELETE FROM [IATISchema].[crs-add/loan-terms/repayment-type]
-				DELETE FROM [IATISchema].[crs-add/other-flags]
-				DELETE FROM [IATISchema].[default-aid-type]
-				DELETE FROM [IATISchema].[description]
-				DELETE FROM [IATISchema].[document-link]
-				DELETE FROM [IATISchema].[document-link/category]
-				DELETE FROM [IATISchema].[document-link/description]
-				DELETE FROM [IATISchema].[document-link/document-date]
-				DELETE FROM [IATISchema].[document-link/language]
-				DELETE FROM [IATISchema].[document-link/title]
-				DELETE FROM [IATISchema].[humanitarian-scope]
-				DELETE FROM [IATISchema].[iati-activities]
-				DELETE FROM [IATISchema].[iati-activity]
-				DELETE FROM [IATISchema].[legacy-data]
-				DELETE FROM [IATISchema].[location]
-				DELETE FROM [IATISchema].[other-identifier]
-				DELETE FROM [IATISchema].[participating-org]
-				DELETE FROM [IATISchema].[policy-marker]
-				DELETE FROM [IATISchema].[recipient-country]
-				DELETE FROM [IATISchema].[recipient-region]
-				DELETE FROM [IATISchema].[related-activity]
-				DELETE FROM [IATISchema].[result]
-				DELETE FROM [IATISchema].[result/description]
-				DELETE FROM [IATISchema].[result/document-link]
-				DELETE FROM [IATISchema].[result/document-link/category]
-				DELETE FROM [IATISchema].[result/document-link/description]
-				DELETE FROM [IATISchema].[result/document-link/document-date]
-				DELETE FROM [IATISchema].[result/document-link/language]
-				DELETE FROM [IATISchema].[result/document-link/title]
-				DELETE FROM [IATISchema].[result/indicator]
-				DELETE FROM [IATISchema].[result/indicator/baseline]
-				DELETE FROM [IATISchema].[result/indicator/baseline/comment]
-				DELETE FROM [IATISchema].[result/indicator/baseline/dimension]
-				DELETE FROM [IATISchema].[result/indicator/baseline/document-link]
-				DELETE FROM [IATISchema].[result/indicator/baseline/document-link/category]
-				DELETE FROM [IATISchema].[result/indicator/baseline/document-link/description]
-				DELETE FROM [IATISchema].[result/indicator/baseline/document-link/document-date]
-				DELETE FROM [IATISchema].[result/indicator/baseline/document-link/language]
-				DELETE FROM [IATISchema].[result/indicator/baseline/document-link/title]
-				DELETE FROM [IATISchema].[result/indicator/baseline/location]
-				DELETE FROM [IATISchema].[result/indicator/document-link]
-				DELETE FROM [IATISchema].[result/indicator/document-link/category]
-				DELETE FROM [IATISchema].[result/indicator/document-link/description]
-				DELETE FROM [IATISchema].[result/indicator/document-link/document-date]
-				DELETE FROM [IATISchema].[result/indicator/document-link/language]
-				DELETE FROM [IATISchema].[result/indicator/document-link/title]
-				DELETE FROM [IATISchema].[result/indicator/period]
-				DELETE FROM [IATISchema].[result/indicator/period/actual]
-				DELETE FROM [IATISchema].[result/indicator/period/actual/comment]
-				DELETE FROM [IATISchema].[result/indicator/period/actual/dimension]
-				DELETE FROM [IATISchema].[result/indicator/period/actual/document-link]
-				DELETE FROM [IATISchema].[result/indicator/period/actual/document-link/category]
-				DELETE FROM [IATISchema].[result/indicator/period/actual/document-link/description]
-				DELETE FROM [IATISchema].[result/indicator/period/actual/document-link/document-date]
-				DELETE FROM [IATISchema].[result/indicator/period/actual/document-link/language]
-				DELETE FROM [IATISchema].[result/indicator/period/actual/location]
-				DELETE FROM [IATISchema].[result/indicator/period/period-end]
-				DELETE FROM [IATISchema].[result/indicator/period/period-start]
-				DELETE FROM [IATISchema].[result/indicator/period/target]
-				DELETE FROM [IATISchema].[result/indicator/period/target/comment]
-				DELETE FROM [IATISchema].[result/indicator/period/target/dimension]
-				DELETE FROM [IATISchema].[result/indicator/period/target/document-link]
-				DELETE FROM [IATISchema].[result/indicator/period/target/document-link/category]
-				DELETE FROM [IATISchema].[result/indicator/period/target/document-link/description]
-				DELETE FROM [IATISchema].[result/indicator/period/target/document-link/document-date]
-				DELETE FROM [IATISchema].[result/indicator/period/target/document-link/language]
-				DELETE FROM [IATISchema].[result/indicator/period/target/document-link/title]
-				DELETE FROM [IATISchema].[result/indicator/period/target/location]
-				DELETE FROM [IATISchema].[result/indicator/reference]
-				DELETE FROM [IATISchema].[result/indicator/title]
-				DELETE FROM [IATISchema].[result/reference]
-				DELETE FROM [IATISchema].[result/title]
-				DELETE FROM [IATISchema].[sector]
-				DELETE FROM [IATISchema].[tag]
-				DELETE FROM [IATISchema].[title]
-				DELETE FROM [IATISchema].[transaction]
-				DELETE FROM [IATISchema].[transaction/aid-type]
+                           /* Clearing down IATISchema tables before re-populating them */
+                           DELETE FROM [IATISchema].[activity-date]
+                           DELETE FROM [IATISchema].[budget]
+                           DELETE FROM [IATISchema].[capital-spend]
+                           DELETE FROM [IATISchema].[collaboration-type]
+                           DELETE FROM [IATISchema].[conditions]
+                           DELETE FROM [IATISchema].[conditions/condition]
+                           DELETE FROM [IATISchema].[contact-info]
+                           DELETE FROM [IATISchema].[contact-info/details]
+                           DELETE FROM [IATISchema].[country-budget-items]
+                           DELETE FROM [IATISchema].[country-budget-items/budget-item]
+                           DELETE FROM [IATISchema].[crs-add]
+                           DELETE FROM [IATISchema].[crs-add/channel-code]
+                           DELETE FROM [IATISchema].[crs-add/loan-status]
+                           DELETE FROM [IATISchema].[crs-add/loan-status/interest-arrears]
+                           DELETE FROM [IATISchema].[crs-add/loan-status/interest-received]
+                           DELETE FROM [IATISchema].[crs-add/loan-status/principal-arrears]
+                           DELETE FROM [IATISchema].[crs-add/loan-status/principal-outstanding]
+                           DELETE FROM [IATISchema].[crs-add/loan-terms]
+                           DELETE FROM [IATISchema].[crs-add/loan-terms/commitment-date]
+                           DELETE FROM [IATISchema].[crs-add/loan-terms/repayment-final-date]
+                           DELETE FROM [IATISchema].[crs-add/loan-terms/repayment-first-date]
+                           DELETE FROM [IATISchema].[crs-add/loan-terms/repayment-plan]
+                           DELETE FROM [IATISchema].[crs-add/loan-terms/repayment-type]
+                           DELETE FROM [IATISchema].[crs-add/other-flags]
+                           DELETE FROM [IATISchema].[default-aid-type]
+                           DELETE FROM [IATISchema].[description]
+                           DELETE FROM [IATISchema].[document-link]
+                           DELETE FROM [IATISchema].[document-link/category]
+                           DELETE FROM [IATISchema].[document-link/description]
+                           DELETE FROM [IATISchema].[document-link/document-date]
+                           DELETE FROM [IATISchema].[document-link/language]
+                           DELETE FROM [IATISchema].[document-link/title]
+                           DELETE FROM [IATISchema].[humanitarian-scope]
+                           DELETE FROM [IATISchema].[iati-activities]
+                           DELETE FROM [IATISchema].[iati-activity]
+                           DELETE FROM [IATISchema].[legacy-data]
+                           DELETE FROM [IATISchema].[location]
+                           DELETE FROM [IATISchema].[other-identifier]
+                           DELETE FROM [IATISchema].[participating-org]
+                           DELETE FROM [IATISchema].[policy-marker]
+                           DELETE FROM [IATISchema].[recipient-country]
+                           DELETE FROM [IATISchema].[recipient-region]
+                           DELETE FROM [IATISchema].[related-activity]
+                           DELETE FROM [IATISchema].[result]
+                           DELETE FROM [IATISchema].[result/description]
+                           DELETE FROM [IATISchema].[result/document-link]
+                           DELETE FROM [IATISchema].[result/document-link/category]
+                           DELETE FROM [IATISchema].[result/document-link/description]
+                           DELETE FROM [IATISchema].[result/document-link/document-date]
+                           DELETE FROM [IATISchema].[result/document-link/language]
+                           DELETE FROM [IATISchema].[result/document-link/title]
+                           DELETE FROM [IATISchema].[result/indicator]
+                           DELETE FROM [IATISchema].[result/indicator/baseline]
+                           DELETE FROM [IATISchema].[result/indicator/baseline/comment]
+                           DELETE FROM [IATISchema].[result/indicator/baseline/dimension]
+                           DELETE FROM [IATISchema].[result/indicator/baseline/document-link]
+                           DELETE FROM [IATISchema].[result/indicator/baseline/document-link/category]
+                           DELETE FROM [IATISchema].[result/indicator/baseline/document-link/description]
+                           DELETE FROM [IATISchema].[result/indicator/baseline/document-link/document-date]
+                           DELETE FROM [IATISchema].[result/indicator/baseline/document-link/language]
+                           DELETE FROM [IATISchema].[result/indicator/baseline/document-link/title]
+                           DELETE FROM [IATISchema].[result/indicator/baseline/location]
+                           DELETE FROM [IATISchema].[result/indicator/document-link]
+                           DELETE FROM [IATISchema].[result/indicator/document-link/category]
+                           DELETE FROM [IATISchema].[result/indicator/document-link/description]
+                           DELETE FROM [IATISchema].[result/indicator/document-link/document-date]
+                           DELETE FROM [IATISchema].[result/indicator/document-link/language]
+                           DELETE FROM [IATISchema].[result/indicator/document-link/title]
+                           DELETE FROM [IATISchema].[result/indicator/period]
+                           DELETE FROM [IATISchema].[result/indicator/period/actual]
+                           DELETE FROM [IATISchema].[result/indicator/period/actual/comment]
+                           DELETE FROM [IATISchema].[result/indicator/period/actual/dimension]
+                           DELETE FROM [IATISchema].[result/indicator/period/actual/document-link]
+                           DELETE FROM [IATISchema].[result/indicator/period/actual/document-link/category]
+                           DELETE FROM [IATISchema].[result/indicator/period/actual/document-link/description]
+                           DELETE FROM [IATISchema].[result/indicator/period/actual/document-link/document-date]
+                           DELETE FROM [IATISchema].[result/indicator/period/actual/document-link/language]
+                           DELETE FROM [IATISchema].[result/indicator/period/actual/location]
+                           DELETE FROM [IATISchema].[result/indicator/period/period-end]
+                           DELETE FROM [IATISchema].[result/indicator/period/period-start]
+                           DELETE FROM [IATISchema].[result/indicator/period/target]
+                           DELETE FROM [IATISchema].[result/indicator/period/target/comment]
+                           DELETE FROM [IATISchema].[result/indicator/period/target/dimension]
+                           DELETE FROM [IATISchema].[result/indicator/period/target/document-link]
+                           DELETE FROM [IATISchema].[result/indicator/period/target/document-link/category]
+                           DELETE FROM [IATISchema].[result/indicator/period/target/document-link/description]
+                           DELETE FROM [IATISchema].[result/indicator/period/target/document-link/document-date]
+                           DELETE FROM [IATISchema].[result/indicator/period/target/document-link/language]
+                           DELETE FROM [IATISchema].[result/indicator/period/target/document-link/title]
+                           DELETE FROM [IATISchema].[result/indicator/period/target/location]
+                           DELETE FROM [IATISchema].[result/indicator/reference]
+                           DELETE FROM [IATISchema].[result/indicator/title]
+                           DELETE FROM [IATISchema].[result/reference]
+                           DELETE FROM [IATISchema].[result/title]
+                           DELETE FROM [IATISchema].[sector]
+                           DELETE FROM [IATISchema].[tag]
+                           DELETE FROM [IATISchema].[title]
+                           DELETE FROM [IATISchema].[transaction]
+                           DELETE FROM [IATISchema].[transaction/aid-type]
 
               /* Storing Information for this run of p_populate */
               INSERT INTO
@@ -455,7 +461,7 @@ AS
                            ,v_ProjectTransformed.ProjectId AS [ProjectIDText]
                            ,plud.LastUpdatedDate
                      FROM
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ProjectTransformed WHERE VersionId=@VersionIdInternal) v_ProjectTransformed
+                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ProjectTransformedCurrent) v_ProjectTransformed
                      INNER JOIN
                            @ProjectLastUpdatedDate plud
                      ON plud.ProjectId = v_ProjectTransformed.ProjectId
@@ -465,7 +471,7 @@ AS
                                   SELECT DISTINCT
                                          ProjectId
                                   FROM
-                                         (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ProjectComponentMappingTransformed WHERE VersionId=@VersionIdInternal) v_ProjectComponentMappingTransformed
+                                         (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ProjectComponentMappingTransformedCurrent) v_ProjectComponentMappingTransformed
                                   INNER JOIN
                                          [PublicationControl].PopulationComponent Component
                                   ON
@@ -484,7 +490,7 @@ AS
                      (
                            [ComponentId]              VARCHAR(25)          NOT NULL PRIMARY KEY
                            ,[ProjectId]               VARCHAR(25)          NOT NULL 
-                           ,[iati-activityID]         INT                        NOT NULL UNIQUE
+                           ,[iati-activityID]         INT                  NOT NULL UNIQUE
                      )
 
                      INSERT INTO
@@ -526,7 +532,7 @@ AS
                            ,v_ComponentTransformed.ComponentId AS [ComponentIDText]
                            ,clud.LastUpdatedDate
                      FROM
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTransformed WHERE VersionId=@VersionIdInternal) v_ComponentTransformed
+                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTransformedCurrent) v_ComponentTransformed
                      INNER JOIN
                            [PublicationControl].PopulationComponent Component
                      ON
@@ -581,96 +587,97 @@ AS
 
                      EXECUTE [PublicationControl].p_PrintProgress N'Populating participating-org with funding, accountable and extending roles'
 
-					 /* Funding, including identifying cross-government funds 
-					    Assumption: that funding is determined by component level relationships with budget centres.
-						Approach:
-							1. Identify component funding orgs using subheadcodes
-							2. Identify project-level funding orgs using aggregate of components
-							3. Insert a union of the 2 tables into the participating-org table
-					 */
-					 
-					 /* Drop Temporary objects */
-					 IF OBJECT_ID('tempdb..#tempParticipatingOrgComponent', 'U') IS NOT NULL
+                                  /* Funding, including identifying cross-government funds 
+                                      Assumption: that funding is determined by component level relationships with budget centres.
+                                         Approach:
+                                                1. Identify component funding orgs using subheadcodes
+                                                2. Identify project-level funding orgs using aggregate of components
+                                                3. Insert a union of the 2 tables into the participating-org table
+                                         [JTA 28/12/2017]
+                                  */
+                                  
+                                   /* Drop Temporary objects */
+                                  IF OBJECT_ID('tempdb..#tempParticipatingOrgComponent', 'U') IS NOT NULL
                            DROP TABLE #tempParticipatingOrgComponent
-					 IF OBJECT_ID('tempdb..#tempParticipatingOrgProject', 'U') IS NOT NULL
+                                  IF OBJECT_ID('tempdb..#tempParticipatingOrgProject', 'U') IS NOT NULL
                            DROP TABLE #tempParticipatingOrgProject
-					 	
-					/*	1. Identify component funding using subheadcodes and insert into temp table */
-						SELECT
-							a.[iati-activityID] AS [iati-activityID]
-							,a.ProjectId
-							,a.ComponentId
-							,NULL AS [@xml:lang]
-							,CASE
-								WHEN c.subheadcode is not null THEN s.[iati-orgcode]
-								ELSE 'GB-GOV-1' END AS [@ref]
-							,'10' AS [@type] -- Government
-							,'1' AS [@role] -- Funding
-							,CASE
-							    WHEN c.subheadcode is not null THEN s.title
-								ELSE 'Department for International Development' END AS [text()]
-						INTO #tempParticipatingOrgComponent
-						FROM
-							[IATISchema].[iati-activity] a
-						LEFT JOIN
-							PublicationControl.v_CrossGov_Funds c on a.ComponentId = c.ComponentId
-						LEFT OUTER JOIN
-							PublicationControl.CrossGovFundsSubheads s on c.subheadcode = s.subheadcode
-						WHERE
-							a.[iati-activitiesID] =  101
-							and a.ComponentId is not NULL
+                                        
+                                  /*     1. Identify component funding using subheadcodes and insert into temp table */
+                                         SELECT
+                                                a.[iati-activityID] AS [iati-activityID]
+                                                ,a.ProjectId
+                                                ,a.ComponentId
+                                                ,NULL AS [@xml:lang]
+                                                ,CASE
+                                                       WHEN c.subheadcode is not null THEN s.[iati-orgcode]
+                                                       ELSE 'GB-GOV-1' END AS [@ref]
+                                                ,'10' AS [@type] -- Government
+                                                ,'1' AS [@role] -- Funding
+                                                ,CASE
+                                                    WHEN c.subheadcode is not null THEN s.title
+                                                       ELSE 'Department for International Development' END AS [text()]
+                                         INTO #tempParticipatingOrgComponent
+                                         FROM
+                                                [IATISchema].[iati-activity] a
+                                         LEFT JOIN
+                                                PublicationControl.v_CrossGov_Funds c on a.ComponentId = c.ComponentId
+                                         LEFT OUTER JOIN
+                                                PublicationControl.CrossGovFundsSubheads s on c.subheadcode = s.subheadcode
+                                         WHERE
+                                                a.[iati-activitiesID] =  101
+                                                and a.ComponentId is not NULL
 
-					/* 2. Identify project-level funding orgs using aggregate of components and insert into temp table */
+                                  /* 2. Identify project-level funding orgs using aggregate of components and insert into temp table */
 
-						SELECT DISTINCT
-							a.[iati-activityID] AS [iati-activityID]
-							,t.ProjectId
-							,null AS ComponentId
-							,NULL AS [@xml:lang]
-							,t.[@ref]
-							,t.[@type] 
-							,t.[@role]
-							,t.[text()]
-						INTO #tempParticipatingOrgProject
-						FROM #tempParticipatingOrgComponent t
-						LEFT JOIN IATISchema.[iati-activity] a
-						on a.ProjectId = t.ProjectId
-						WHERE a.ComponentId is null
-						order by t.ProjectId
+                                         SELECT DISTINCT
+                                                a.[iati-activityID] AS [iati-activityID]
+                                                ,t.ProjectId
+                                                ,null AS ComponentId
+                                                ,NULL AS [@xml:lang]
+                                                ,t.[@ref]
+                                                ,t.[@type] 
+                                                ,t.[@role]
+                                                ,t.[text()]
+                                         INTO #tempParticipatingOrgProject
+                                         FROM #tempParticipatingOrgComponent t
+                                         LEFT JOIN IATISchema.[iati-activity] a
+                                         on a.ProjectId = t.ProjectId
+                                         WHERE a.ComponentId is null
+                                         order by t.ProjectId
 
-					/* 3. Insert funding organisation results into participating-org table */
+                                  /* 3. Insert funding organisation results into participating-org table */
 
-						INSERT INTO
-							[IATISchema].[participating-org]
-						(
-							--[participating-orgID]
-							[iati-activityID]
-							,[@xml:lang]
-							,[@ref]
-							,[@type]
-							,[@role]
-							,[text()]
-						)						
-						SELECT 
-							[iati-activityID]
-							,[@xml:lang]
-							,[@ref]
-							,[@type]
-							,[@role]
-							,[text()] 
-						FROM #tempParticipatingOrgProject
-						UNION 
-						SELECT 
-							[iati-activityID]
-							,[@xml:lang]
-							,[@ref]
-							,[@type]
-							,[@role]
-							,[text()] 
-						FROM #tempParticipatingOrgComponent 
+                                         INSERT INTO
+                                                [IATISchema].[participating-org]
+                                         (
+                                                --[participating-orgID]
+                                                [iati-activityID]
+                                                ,[@xml:lang]
+                                                ,[@ref]
+                                                ,[@type]
+                                                ,[@role]
+                                                ,[text()]
+                                         )                                        
+                                         SELECT 
+                                                [iati-activityID]
+                                                ,[@xml:lang]
+                                                ,[@ref]
+                                                ,[@type]
+                                                ,[@role]
+                                                ,[text()] 
+                                         FROM #tempParticipatingOrgProject
+                                         UNION 
+                                         SELECT 
+                                                [iati-activityID]
+                                                ,[@xml:lang]
+                                                ,[@ref]
+                                                ,[@type]
+                                                ,[@role]
+                                                ,[text()] 
+                                         FROM #tempParticipatingOrgComponent 
 
- 
- 					 /* Accountable organisations (in this case DFID only) */
+
+                                   /* Accountable organisations (in this case DFID only) */
 
                      INSERT INTO
                            [IATISchema].[participating-org]
@@ -689,41 +696,41 @@ AS
                            ,'GB-GOV-1' AS [@ref]
                            ,'10' AS [@type] -- Government
                            ,'2' AS [@role] -- Accountable
-						   ,'Department for International Development' AS [text()]
+                                            ,'Department for International Development' AS [text()]
                      FROM
                            [IATISchema].[iati-activity]
                      WHERE
                            [iati-activity].[iati-activitiesID] =  @ActivitiesId 
 
-					 /* Extending */
+                                  /* Extending */
 
-                     INSERT INTO
-                           [IATISchema].[participating-org]
-                     (
-                           --[participating-orgID]
-                           [iati-activityID]
-                           ,[@xml:lang]
-                           ,[@ref]
-                           ,[@type]
-                           ,[@role]
-                           ,[text()]
-                     )
-                     SELECT
-                           [iati-activity].[iati-activityID] AS [iati-activityID]
-                           ,NULL AS [@xml:lang]
-                           ,'GB-GOV-1' AS [@ref]
-                           ,'10' AS [@type] -- Government
-                           ,'3' AS [@role] -- Extending
-						   ,'Department for International Development' AS [text()]
-                     FROM
-                           [IATISchema].[iati-activity]
-                     WHERE
-                           [iati-activity].[iati-activitiesID] =  @ActivitiesId
+                     -- INSERT INTO
+                     --       [IATISchema].[participating-org]
+                     -- (
+                     --       --[participating-orgID]
+                     --       [iati-activityID]
+                     --       ,[@xml:lang]
+                     --       ,[@ref]
+                     --       ,[@type]
+                     --       ,[@role]
+                     --       ,[text()]
+                     -- )
+                     -- SELECT
+                     --       [iati-activity].[iati-activityID] AS [iati-activityID]
+                     --       ,NULL AS [@xml:lang]
+                     --       ,'GB-GOV-1' AS [@ref]
+                     --       ,'10' AS [@type] -- Government
+                     --       ,'3' AS [@role] -- Extending
+                     --                        ,'Department for International Development' AS [text()]
+                     -- FROM
+                     --       [IATISchema].[iati-activity]
+                     -- WHERE
+                     --       [iati-activity].[iati-activitiesID] =  @ActivitiesId
    
                     
                     /* Store recipient-country along with [iati-activityID] in [IATISchema].[other-identifier]*/
 
-					EXECUTE [PublicationControl].p_PrintProgress N'Populating other-identifier with Type A1'
+                                  EXECUTE [PublicationControl].p_PrintProgress N'Populating other-identifier with Type A1'
 
                     INSERT INTO 
                                 [IATISchema].[other-identifier]
@@ -731,14 +738,14 @@ AS
                                 [iati-activityID]
                                 ,[@ref]
                                 ,[@type]
-								,[owner-org/@ref]
-								,[owner-org/text()]
+                                                       ,[owner-org/@ref]
+                                                      ,[owner-org/text()]
                     )
                     SELECT
                            [iati-activity].[iati-activityID] AS [iati-activityID]
                            ,[other-identifier/text()] AS [@ref]                                
                            ,'A1' AS [@type]                     
-						   ,[other-identifier/@owner-ref] AS [owner-org/@ref]
+                                            ,[other-identifier/@owner-ref] AS [owner-org/@ref]
                            ,ISNULL([other-identifier/@owner-name], OtherIdentifierOwner.Name) AS [owner-org/text()]        
                      FROM
                            [IATISchema].[iati-activity]
@@ -751,20 +758,20 @@ AS
 
                     EXECUTE [PublicationControl].p_PrintProgress N'Populating other-identifier with Type B1'
 
-					INSERT INTO 
-								[IATISchema].[other-identifier]
-					(
-								[iati-activityID]
-								,[@ref]
+                                  INSERT INTO 
+                                                       [IATISchema].[other-identifier]
+                                  (
+                                                       [iati-activityID]
+                                                       ,[@ref]
                                 ,[@type]
-								,[owner-org/@ref]
-								,[owner-org/text()]
-					)
-					SELECT
+                                                       ,[owner-org/@ref]
+                                                       ,[owner-org/text()]
+                                  )
+                                  SELECT
                            [iati-activity].[iati-activityID] AS [iati-activityID]
                            ,'GB-1' AS [@ref]                                
                            ,'B1' AS [@type]                     
-						   ,[other-identifier/@owner-ref] AS [owner-org/@ref]
+                                            ,[other-identifier/@owner-ref] AS [owner-org/@ref]
                            ,'DFID previous reporting-org identifier' AS [owner-org/text()]       
                      FROM
                            [IATISchema].[iati-activity]
@@ -837,16 +844,16 @@ AS
                            AND [iati-activity].ComponentId IS NOT NULL
                            AND [iati-activity].RegionCode IS NOT NULL
 
-					 /*** Set the Default Aid Type based on the: Views, DAC sectors and Markers***/
+                                  /*** Set the Default Aid Type based on the: Views, DAC sectors and Markers***/
 
-        			 INSERT INTO [IATISchema].[default-aid-type]
-					 (     
-						   [iati-activityID]
-						  ,[@code]
-						  ,[@vocabulary]
-					 )
-					 SELECT
-						   [iati-activityID] AS [iati-activityID] 	
+                            INSERT INTO [IATISchema].[default-aid-type]
+                                  (     
+                                            [iati-activityID]
+                                           ,[@code]
+                                           ,[@vocabulary]
+                                  )
+                                  SELECT
+                                            [iati-activityID] AS [iati-activityID]       
                            ,CASE
                                   WHEN v_ComponentTransformed.FundingTypeCode = 'GENBUDGETSUPPORT' THEN 'A01'
                                   WHEN v_ComponentTransformed.FundingTypeCode = 'SECTORBUDGETSUPPORT' THEN 'A02'
@@ -862,15 +869,15 @@ AS
                      FROM
                            [IATISchema].[iati-activity]
                      LEFT OUTER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTransformed WHERE VersionId=@VersionIdInternal) v_ComponentTransformed
+                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTransformedCurrent) v_ComponentTransformed
                      ON
                            [iati-activity].ComponentId = v_ComponentTransformed.ComponentId
                      LEFT OUTER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentBiMultiMarkerTransformed WHERE VersionId=@VersionIdInternal) v_ComponentBiMultiMarkerTransformed
+                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentBiMultiMarkerTransformedCurrent) v_ComponentBiMultiMarkerTransformed
                      ON
                            [iati-activity].ComponentId = v_ComponentBiMultiMarkerTransformed.ComponentId
                      LEFT OUTER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTypeOfFinanceTransformed WHERE VersionId=@VersionIdInternal) v_ComponentTypeOfFinanceTransformed
+                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTypeOfFinanceTransformedCurrent) v_ComponentTypeOfFinanceTransformed
                      ON
                            v_ComponentTypeOfFinanceTransformed.Rank = 1
                            AND [iati-activity].ComponentId = v_ComponentTypeOfFinanceTransformed.ComponentId
@@ -881,9 +888,9 @@ AS
                                   ,v_InputSectorTransformed.DACSectorCode
                                   ,ROW_NUMBER() OVER (PARTITION BY v_ComponentInputSectorTransformed.ComponentId ORDER BY SUM(Percentage) DESC) AS Rank
                            FROM
-                                  (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentInputSectorTransformed WHERE VersionId=@VersionIdInternal) v_ComponentInputSectorTransformed
+                                  (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentInputSectorTransformedCurrent) v_ComponentInputSectorTransformed
                            INNER JOIN
-                                  (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_InputSectorTransformed WHERE VersionId=@VersionIdInternal) v_InputSectorTransformed
+                                  (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_InputSectorTransformedCurrent) v_InputSectorTransformed
                            ON
                                   v_ComponentInputSectorTransformed.InputSectorCode = v_InputSectorTransformed.InputSectorCode
                            GROUP BY
@@ -917,11 +924,11 @@ AS
                      FROM
                            [IATISchema].[iati-activity]
                      LEFT OUTER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTransformed WHERE VersionId=@VersionIdInternal) v_ComponentTransformed
+                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTransformedCurrent) v_ComponentTransformed
                      ON
                            [iati-activity].ComponentId = v_ComponentTransformed.ComponentId
                      LEFT OUTER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentBiMultiMarkerTransformed WHERE VersionId=@VersionIdInternal) v_ComponentBiMultiMarkerTransformed
+                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentBiMultiMarkerTransformedCurrent) v_ComponentBiMultiMarkerTransformed
                      ON
                            [iati-activity].ComponentId = v_ComponentBiMultiMarkerTransformed.ComponentId
                      WHERE
@@ -946,12 +953,12 @@ AS
                      FROM
                            [IATISchema].[iati-activity]
                      LEFT OUTER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTransformed WHERE VersionId=@VersionIdInternal) v_ComponentTransformed
+                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTransformedCurrent) v_ComponentTransformed
                      ON
                            [iati-activity].ComponentId = v_ComponentTransformed.ComponentId
                      WHERE
                            [iati-activity].[iati-activitiesID] = @ActivitiesId
-                           AND [iati-activity].ComponentId IS NOT NULL
+                          AND [iati-activity].ComponentId IS NOT NULL
 
                     /*** default-finance-type ***/
 
@@ -965,11 +972,11 @@ AS
                      FROM
                            [IATISchema].[iati-activity]
                      LEFT OUTER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTransformed WHERE VersionId=@VersionIdInternal) v_ComponentTransformed
+                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTransformedCurrent) v_ComponentTransformed
                      ON
                            [iati-activity].ComponentId = v_ComponentTransformed.ComponentId
                      LEFT OUTER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTypeOfFinanceTransformed WHERE VersionId=@VersionIdInternal) v_ComponentTypeOfFinanceTransformed
+                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTypeOfFinanceTransformedCurrent) v_ComponentTypeOfFinanceTransformed
                      ON
                            v_ComponentTypeOfFinanceTransformed.Rank = 1
                            AND [iati-activity].ComponentId = v_ComponentTypeOfFinanceTransformed.ComponentId
@@ -1003,7 +1010,7 @@ AS
                      FROM
                            @ProjectActivityMapping ProjectActivityMapping
                      INNER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ProjectTransformed WHERE VersionId=@VersionIdInternal) v_ProjectTransformed
+                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ProjectTransformedCurrent) v_ProjectTransformed
                      ON
                            ProjectActivityMapping.ProjectId = v_ProjectTransformed.ProjectId
                      UNION ALL
@@ -1014,7 +1021,7 @@ AS
                     FROM
                            @ComponentActivityMapping ComponentActivityMapping
                      INNER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTransformed WHERE VersionId=@VersionIdInternal) v_ComponentTransformed
+                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTransformedCurrent) v_ComponentTransformed
                      ON
                            ComponentActivityMapping.ComponentId = v_ComponentTransformed.ComponentId
 
@@ -1027,18 +1034,18 @@ AS
                      (
                            [iati-activityID]    
                            ,[@xml:lang]  
-						   ,[@type]                 
+                           ,[@type]                 
                            ,[text()]                  
                      )
                      SELECT
                            ProjectActivityMapping.[iati-activityID] AS [iati-activityID] 
                            ,NULL
-						   ,NULL
+                           ,'1'
                            ,v_ProjectTransformed.MostRecentPurpose
                      FROM
                            @ProjectActivityMapping ProjectActivityMapping
                      INNER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ProjectTransformed WHERE VersionId=@VersionIdInternal) v_ProjectTransformed
+                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ProjectTransformedCurrent) v_ProjectTransformed
                      ON
                            ProjectActivityMapping.ProjectId = v_ProjectTransformed.ProjectId
                      WHERE
@@ -1062,27 +1069,27 @@ AS
                      SELECT
                            ComponentActivityMapping.[iati-activityID] AS [iati-activityID]
                            ,NULL AS [@xml:lang]
-                           ,v_InputSectorTransformed.DACSectorCode AS [@code]
+                           ,DAC5DigitSector.Code AS [@code]
                            ,NULL AS [@type]
                            ,NULL AS [@other-code]
                            ,NULL AS [@vocabulary] -- 1 is the default for OECD DAC CRS
-                           ,NULLIF(v_ComponentInputSectorTransformed.percentage, 100) AS [@percentage]
-                           ,v_InputSectorTransformed.DACSectorName As [text()]
+                           ,NULLIF(v_DACPurposeCodesMultiRowsTransformed.percentage, 100) AS [@percentage]
+                           ,DAC5DigitSector.Name As [text()]
                      FROM
                            @ComponentActivityMapping ComponentActivityMapping
                      INNER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentInputSectorTransformed WHERE VersionId=@VersionIdInternal) v_ComponentInputSectorTransformed
+                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_DACPurposeCodesMultiRowsTransformedCurrent) v_DACPurposeCodesMultiRowsTransformed
                      ON
-                           v_ComponentInputSectorTransformed.Percentage != 0
-                           AND ComponentActivityMapping.ComponentId = v_ComponentInputSectorTransformed.ComponentId
-                     INNER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_InputSectorTransformed WHERE VersionId=@VersionIdInternal) v_InputSectorTransformed
-                     ON
-                           v_ComponentInputSectorTransformed.InputSectorCode = v_InputSectorTransformed.InputSectorCode
+                           v_DACPurposeCodesMultiRowsTransformed.Percentage != 0
+                           AND ComponentActivityMapping.ComponentId = v_DACPurposeCodesMultiRowsTransformed.ComponentId
+                     --INNER JOIN
+                            --(SELECT * FROM [ProjectDataMart].AgressoTransformation.v_InputSectorTransformed WHERE VersionId=@VersionIdInternal) v_InputSectorTransformed
+                     --ON
+                           --v_DACPurposeCodesMultiRowsTransformed.DACSectorCode = v_InputSectorTransformed.InputSectorCode
                      INNER JOIN
                            [Codelist].DAC5DigitSector
                      ON
-                           v_InputSectorTransformed.DACSectorCode = DAC5DigitSector.Code
+                           v_DACPurposeCodesMultiRowsTransformed.DACSectorCode = DAC5DigitSector.Code
 
                      
                      /* Populate activity-date for projects along with [iati-activityID] in [IATISchema].[activity-date]*/
@@ -1108,13 +1115,13 @@ AS
                                   WHEN ActivityDateType.Code='1' THEN v_ProjectTransformed.OperationalStartDate
                                   WHEN ActivityDateType.Code='3' THEN v_ProjectTransformed.OperationalEndDate
                                   WHEN ActivityDateType.Code='2' THEN v_ProjectTransformed.ApprovalDate
-                                  WHEN ActivityDateType.Code='4' AND v_ProjectTransformed.OperationalEndDate<GETDATE() THEN v_ProjectTransformed.OperationalEndDate  
+                                  WHEN ActivityDateType.Code='4' THEN v_ProjectTransformed.ActualEndDate  
                                   END AS [@iso-date]
                                   ,NULL AS [text()]    
                            FROM
                                   [IATISchema].[iati-activity]
                            INNER JOIN 
-                                  (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ProjectTransformed WHERE VersionId=@VersionIdInternal) v_ProjectTransformed
+                                  (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ProjectTransformedCurrent) v_ProjectTransformed
                            ON
                                   [iati-activity].ProjectId = v_ProjectTransformed.ProjectId
                            CROSS JOIN
@@ -1149,13 +1156,13 @@ AS
                                   WHEN ActivityDateType.Code='1' THEN v_ComponentTransformed.OperationalStartDate
                                   WHEN ActivityDateType.Code='3' THEN v_ComponentTransformed.OperationalEndDate
                                   WHEN ActivityDateType.Code='2' THEN v_ComponentTransformed.OperationalStartDate
-                                  WHEN ActivityDateType.Code='4' AND v_ComponentTransformed.OperationalEndDate<GETDATE() THEN v_ComponentTransformed.OperationalEndDate       
+                                  WHEN ActivityDateType.Code='4' AND v_ComponentTransformed.OperationalEndDate<GETDATE() THEN v_ComponentTransformed.OperationalEndDate        
                                   END AS [@iso-date]
                                   ,NULL AS [text()]    
                            FROM
                                   [IATISchema].[iati-activity]
                            INNER JOIN 
-                                  (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTransformed WHERE VersionId=@VersionIdInternal) v_ComponentTransformed
+                                  (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTransformedCurrent) v_ComponentTransformed
                            ON
                                   [iati-activity].ComponentId = v_ComponentTransformed.ComponentId
                            ----CROSS JOIN (SELECT * FROM $(CodeListSchema).ActivityDateType WHERE Code LIKE '%planned') ActivityDateType
@@ -1189,7 +1196,7 @@ AS
                            ,[activity-status/@type] = NULL
                            ,[activity-status/text()] = NULL -- text filled automatically by view if no explicit name specified
                      FROM
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ProjectTransformed WHERE VersionId=@VersionIdInternal) v_ProjectTransformed
+                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ProjectTransformedCurrent) v_ProjectTransformed
                      WHERE
                            [iati-activity].[iati-activitiesID] = @ActivitiesId
                            AND [iati-activity].ProjectId = v_ProjectTransformed.ProjectId
@@ -1265,7 +1272,6 @@ AS
                      /*** policy-marker ***/
                      /* Populate policy-marker info along with [iati-activityID] in [IATISchema].[policy-marker]*/
                      
-                     /* Step 1 */
                      INSERT INTO
                            [IATISchema].[policy-marker]
                      (
@@ -1277,366 +1283,46 @@ AS
                            ,[@significance]
                            ,[text()]
                      )
+
                      SELECT
                            [iati-activity].[iati-activityID] AS [iati-activityID]
                            ,NULL AS [@xml:lang]
-                           ,1 AS [@code]
+                           ,pm.policyMarker AS [@code]
                            ,NULL AS [@type]
                            ,'1' AS [@vocabulary]
-                           ,CASE
-                           WHEN v_ProjectTransformed.CCOGenderEqualityCode = 'PRINCIPAL' THEN 2
-                           WHEN v_ProjectTransformed.CCOGenderEqualityCode = 'SIGNIFICANT' THEN 1
-                           ELSE 0
-                           END AS [@significance]
+                           ,pm.Significance AS [@significance]
                            ,NULL AS [text()]
                      FROM
                            [IATISchema].[iati-activity]
                      INNER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ProjectTransformed WHERE VersionId=@VersionIdInternal) v_ProjectTransformed
-                     ON
-                           --f_ProjectTransformed.CCOGenderEqualityCode != ''
-                           [iati-activity].ProjectId = v_ProjectTransformed.ProjectId
-                     WHERE
-                           [iati-activity].[iati-activitiesID] = @ActivitiesId
-                           AND [iati-activity].ComponentId IS NOT NULL
-                     
-                     /* Step 2 */
-                     INSERT INTO
-                           [IATISchema].[policy-marker]
-                     (
-                           [iati-activityID]
-                           ,[@xml:lang]
-                           ,[@code]
-                           ,[@type]
-                           ,[@vocabulary]
-                           ,[@significance]
-                           ,[text()]
-                     )
-                     SELECT
-                           [iati-activity].[iati-activityID] AS [iati-activityID]
-                           ,NULL AS [@xml:lang]
-                           ,2 AS [@code]
-                           ,NULL AS [@type]
-                           ,'1' AS [@vocabulary]
-                           ,CASE
-                           WHEN v_ProjectTransformed.DSOClimateChange = 'Principal' THEN 2
-                           WHEN v_ProjectTransformed.DSOClimateChange = 'Significant' THEN 1
-                           ELSE 0
-                           END AS [@significance]
-                           ,NULL AS [text()]
-                     FROM
-                           [IATISchema].[iati-activity]
-                     INNER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ProjectTransformed WHERE VersionId=@VersionIdInternal) v_ProjectTransformed
-                     ON
-                           --f_ProjectTransformed.DSOClimateChange != ''
-                           [iati-activity].ProjectId = v_ProjectTransformed.ProjectId
-                     WHERE
-                           [iati-activity].[iati-activitiesID] = @ActivitiesId
-                           AND [iati-activity].ComponentId IS NOT NULL
-                     
-                     /* Step 3 */
-                     INSERT INTO
-                           [IATISchema].[policy-marker]
-                     (
-                           [iati-activityID]
-                           ,[@xml:lang]
-                           ,[@code]
-                           ,[@type]
-                           ,[@vocabulary]
-                           ,[@significance]
-                           ,[text()]
-                     )
-                     SELECT
-                           [iati-activity].[iati-activityID] AS [iati-activityID]
-                           ,NULL AS [@xml:lang]
-                           ,3 AS [@code]
-                           ,NULL AS [@type]
-                           ,'1' AS [@vocabulary]
-                           ,CASE
-                           WHEN
-                                  SUM(
-                                         CASE
-                                         WHEN
-                                                v_ComponentInputSectorTransformed.LineNumber = 1 AND
-                                                (
-                                                       v_ComponentInputSectorTransformed.InputSectorCode IN ('15130', '15150', '15210', '15220', '15230', '15240', '15261')
-                                                       OR v_ComponentInputSectorTransformed.InputSectorCode LIKE '1512%'
-                                                       OR v_ComponentInputSectorTransformed.InputSectorCode LIKE '1514%'
-                                                       OR v_ComponentInputSectorTransformed.InputSectorCode LIKE '1516%'
-                                                )
-                                         THEN
-                                                1
-                                         ELSE
-                                                0                    
-                                         END
-                                  ) > 0
-                           THEN
-                                  2
-                           WHEN
-                                 SUM(
-                                         CASE
-                                         WHEN
-                                                v_ComponentInputSectorTransformed.InputSectorCode IN ('15130', '15150', '15210', '15220', '15230', '15240', '15261')
-                                                OR v_ComponentInputSectorTransformed.InputSectorCode LIKE '1512%'
-                                                OR v_ComponentInputSectorTransformed.InputSectorCode LIKE '1514%'
-                                                OR v_ComponentInputSectorTransformed.InputSectorCode LIKE '1516%'
-                                         THEN
-                                                1
-                                         ELSE
-                                                0                    
-                                         END
-                                  ) > 0
-                           THEN
-                                  1
-                           ELSE
-                                  0
-                           END AS [@significance]
-                           ,NULL AS [text()]
-                     FROM
-                           [IATISchema].[iati-activity]
-                     INNER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentInputSectorTransformed WHERE VersionId=@VersionIdInternal) v_ComponentInputSectorTransformed
-                     ON
-                           [iati-activity].ComponentId = v_ComponentInputSectorTransformed.ComponentId
-                     WHERE
-                           [iati-activity].[iati-activitiesID] = @ActivitiesId
-                           AND [iati-activity].ComponentId IS NOT NULL
-                     GROUP BY
-                           [iati-activity].[iati-activityID]
-                     
-                     /* Step 4 */
-                     INSERT INTO
-                           [IATISchema].[policy-marker]
-                     (
-                           [iati-activityID]
-                           ,[@xml:lang]
-                           ,[@code]
-                           ,[@type]
-                           ,[@vocabulary]
-                           ,[@significance]
-                           ,[text()]
-                     )
-                     SELECT
-                           [iati-activity].[iati-activityID] AS [iati-activityID]
-                           ,NULL AS [@xml:lang]
-                           ,4 AS [@code]
-                           ,NULL AS [@type]
-                           ,'1' AS [@vocabulary]
-                           ,CASE
-                           WHEN
-                                  SUM(
-                                         CASE
-                                         WHEN
-                                                (
-                                                       v_ComponentInputSectorTransformed.InputSectorCode IN ('33210', '25010')
-                                                       OR v_ComponentInputSectorTransformed.InputSectorCode LIKE '240%'
-                                                       OR v_ComponentInputSectorTransformed.InputSectorCode LIKE '311%'
-                                                       OR v_ComponentInputSectorTransformed.InputSectorCode LIKE '312%'
-                                                       OR v_ComponentInputSectorTransformed.InputSectorCode LIKE '313%'
-                                                       OR v_ComponentInputSectorTransformed.InputSectorCode LIKE '321%'
-                                                       OR v_ComponentInputSectorTransformed.InputSectorCode LIKE '322%'
-                                                )
-                                         THEN
-                                                percentage
-                                         ELSE
-                                                0                    
-                                         END
-                                  ) > 50
-                           THEN
-                                  2
-                           WHEN
-                                  SUM(
-                                         CASE
-                                         WHEN
-                                                v_ComponentInputSectorTransformed.LineNumber = 1 AND
-                                                (
-                                                       v_ComponentInputSectorTransformed.InputSectorCode IN ('33210', '25010')
-                                                       OR v_ComponentInputSectorTransformed.InputSectorCode LIKE '240%'
-                                                       OR v_ComponentInputSectorTransformed.InputSectorCode LIKE '311%'
-                                                       OR v_ComponentInputSectorTransformed.InputSectorCode LIKE '312%'
-                                                       OR v_ComponentInputSectorTransformed.InputSectorCode LIKE '313%'
-                                                       OR v_ComponentInputSectorTransformed.InputSectorCode LIKE '321%'
-                                                       OR v_ComponentInputSectorTransformed.InputSectorCode LIKE '322%'
-                                                )
-                                         THEN
-                                                1
-                                         ELSE
-                                                0                    
-                                         END
-                                  ) > 0
-                                  AND SUM(CASE WHEN v_ComponentInputSectorTransformed.InputSectorCode IN ('33110', '33120', '33130', '33140', '33150', '33181') THEN 1 ELSE 0 END) > 0
-                           THEN
-                                  1
-                           ELSE
-                                  0
-                           END AS [@significance]
-                           ,NULL AS [text()]
-                     FROM
-                           [IATISchema].[iati-activity]
-                     INNER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentInputSectorTransformed WHERE VersionId=@VersionIdInternal) v_ComponentInputSectorTransformed
-                     ON
-                           [iati-activity].ComponentId = v_ComponentInputSectorTransformed.ComponentId
-                     WHERE
-                           [iati-activity].[iati-activitiesID] = @ActivitiesId
-                           AND [iati-activity].ComponentId IS NOT NULL
-                     GROUP BY
-                           [iati-activity].[iati-activityID]
-                     
-                     /* Step 5 */
-                     INSERT INTO
-                           [IATISchema].[policy-marker]
-                     (
-                           [iati-activityID]
-                           ,[@xml:lang]
-                           ,[@code]
-                           ,[@type]
-                           ,[@vocabulary]
-                           ,[@significance]
-                           ,[text()]
-                     )
-                     SELECT
-                           [iati-activity].[iati-activityID] AS [iati-activityID]
-                           ,NULL AS [@xml:lang]
-                           ,5 AS [@code]
-                           ,NULL AS [@type]
-                           ,'1' AS [@vocabulary]
-                           ,CASE
-                           WHEN SUM(CASE WHEN v_ComponentInputSectorTransformed.LineNumber = 1 AND v_ComponentInputSectorTransformed.InputSectorCode IN ('41031') THEN 1 ELSE 0 END) > 0 THEN 2
-                           WHEN SUM(CASE WHEN v_ComponentInputSectorTransformed.InputSectorCode IN ('41031') THEN 1 ELSE 0 END) > 0 THEN 1
-                           ELSE 0
-                           END AS [@significance]
-                           ,NULL AS [text()]
-                     FROM
-                           [IATISchema].[iati-activity]
-                     INNER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentInputSectorTransformed WHERE VersionId=@VersionIdInternal) v_ComponentInputSectorTransformed
-                     ON
-                           [iati-activity].ComponentId = v_ComponentInputSectorTransformed.ComponentId
-                     WHERE
-                           [iati-activity].[iati-activitiesID] = @ActivitiesId
-                           AND [iati-activity].ComponentId IS NOT NULL
-                     GROUP BY
-                           [iati-activity].[iati-activityID]
-                     
-                     /* Step 6 */
-                     INSERT INTO
-                           [IATISchema].[policy-marker]
-                     (
-                           [iati-activityID]
-                           ,[@xml:lang]
-                           ,[@code]
-                           ,[@type]
-                           ,[@vocabulary]
-                           ,[@significance]
-                           ,[text()]
-                     )
-                     SELECT
-                           [iati-activity].[iati-activityID] AS [iati-activityID]
-                           ,NULL AS [@xml:lang]
-                           ,6 AS [@code]
-                           ,NULL AS [@type]
-                           ,'1' AS [@vocabulary]
-                           ,CASE
-                           WHEN SUM(CASE WHEN v_ComponentInputSectorTransformed.InputSectorCode IN ('41033') THEN percentage ELSE 0 END) >= 50 THEN 2
-                           WHEN SUM(CASE WHEN v_ComponentInputSectorTransformed.InputSectorCode IN ('41033') THEN percentage ELSE 0 END) > 0 THEN 1
-                           ELSE 0
-                           END AS [@significance]
-                           ,NULL AS [text()]
-                     FROM
-                           [IATISchema].[iati-activity]
-                     INNER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentInputSectorTransformed WHERE VersionId=@VersionIdInternal) v_ComponentInputSectorTransformed
-                     ON
-                           [iati-activity].ComponentId = v_ComponentInputSectorTransformed.ComponentId
-                     WHERE
-                           [iati-activity].[iati-activitiesID] = @ActivitiesId
-                           AND [iati-activity].ComponentId IS NOT NULL
-                     GROUP BY
-                           [iati-activity].[iati-activityID]
-                     
-                     /* Step 7 */
-                     INSERT INTO
-                           [IATISchema].[policy-marker]
-                     (
-                           [iati-activityID]
-                           ,[@xml:lang]
-                           ,[@code]
-                           ,[@type]
-                           ,[@vocabulary]
-                           ,[@significance]
-                           ,[text()]
-                     )
-                     SELECT
-                           [iati-activity].[iati-activityID] AS [iati-activityID]
-                           ,NULL AS [@xml:lang]
-                           ,7 AS [@code]
-                           ,NULL AS [@type]
-                           ,'1' AS [@vocabulary]
-                           ,CASE
-                           WHEN SUM(CASE WHEN v_ComponentInputSectorTransformed.InputSectorCode IN ('23010', '23030', '80017', '80019', '80023', '41032') THEN 1 ELSE 0 END) > 0 THEN
-                                  CASE v_ProjectTransformed.DSOClimateChange WHEN 'Principal' THEN 2 WHEN 'Significant' THEN 1 ELSE 0 END
-                           ELSE 0
-                           END AS [@significance]
-                           ,NULL AS [text()]
-                     FROM
-                           [IATISchema].[iati-activity]
-                     INNER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ProjectTransformed WHERE VersionId=@VersionIdInternal) v_ProjectTransformed
-                     ON
-                           [iati-activity].ProjectId = v_ProjectTransformed.ProjectId
-                     INNER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentInputSectorTransformed WHERE VersionId=@VersionIdInternal) v_ComponentInputSectorTransformed
-                     ON
-                           [iati-activity].ComponentId = v_ComponentInputSectorTransformed.ComponentId
-                     WHERE
-                           [iati-activity].[iati-activitiesID] = @ActivitiesId
-                           AND [iati-activity].ComponentId IS NOT NULL
-                     GROUP BY
-                           [iati-activity].[iati-activityID]
-                           ,v_ProjectTransformed.DSOClimateChange
-                     
-                     /* Step 8 */
-                     INSERT INTO
-                           [IATISchema].[policy-marker]
-                     (
-                           [iati-activityID]
-                           ,[@xml:lang]
-                           ,[@code]
-                           ,[@type]
-                           ,[@vocabulary]
-                           ,[@significance]
-                           ,[text()]
-                     )
-                     SELECT
-                           [iati-activity].[iati-activityID] AS [iati-activityID]
-                           ,NULL AS [@xml:lang]
-                           ,8 AS [@code]
-                           ,NULL AS [@type]
-                           ,'1' AS [@vocabulary]
-                           ,CASE
-                           WHEN SUM(CASE WHEN v_ComponentInputSectorTransformed.InputSectorCode IN ('12262', '14010', '14015', '14040', '31110', '31130', '41010', '41050', '74010', '80018', '80020') THEN 1 ELSE 0 END) > 0 THEN
-                                  CASE v_ProjectTransformed.DSOClimateChange WHEN 'Principal' THEN 2 WHEN 'Significant' THEN 1 ELSE 0 END
-                           ELSE 0
-                           END AS [@significance]
-                           ,NULL AS [text()]
-                     FROM
-                           [IATISchema].[iati-activity]
-                     INNER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ProjectTransformed WHERE VersionId=@VersionIdInternal) v_ProjectTransformed
-                     ON
-                           [iati-activity].ProjectId = v_ProjectTransformed.ProjectId
-                     INNER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentInputSectorTransformed WHERE VersionId=@VersionIdInternal) v_ComponentInputSectorTransformed
-                     ON
-                           [iati-activity].ComponentId = v_ComponentInputSectorTransformed.ComponentId
-                     WHERE
-                           [iati-activity].[iati-activitiesID] = @ActivitiesId
-                           AND [iati-activity].ComponentId IS NOT NULL
-                     GROUP BY
-                           [iati-activity].[iati-activityID]
-                           ,v_ProjectTransformed.DSOClimateChange
+                            (Select finalPolicyMarkers.PROJECTID,
+                            CASE
+                            WHEN policyMarker = 'GenderEquality' THEN '1'
+                            WHEN policyMarker = 'Biodiversity' THEN '5'
+                            WHEN policyMarker = 'Mitigation' THEN '6'
+                            WHEN policyMarker = 'Adaptation' THEN '7'
+                            WHEN policyMarker = 'Desertification' THEN '8'
+                            WHEN policyMarker = 'Disability' THEN '11'
+                            END AS policyMarker,
+                            CASE
+                            WHEN Significance = 'NOTTARGETED' THEN '0'
+                            WHEN Significance = 'PRINCIPAL' THEN '2'
+                            WHEN Significance = 'SIGNIFICANT' THEN '1'
+                            ELSE '0'
+                            END AS Significance
+                            FROM
+                            (SELECT PROJECTID,POLICYMARKER,SIGNIFICANCE
+                            from
+                            (select projectid,[GenderEquality],[Biodiversity],[Mitigation],[Adaptation],[Desertification],[Disability] from [ProjectDataMart].[AMPSourceData].[v_Project_ProjectMarkersCurrent]
+                            ) p
+                            UNPIVOT
+                            (Significance FOR policyMarker in (GenderEquality,Biodiversity,Mitigation,Adaptation,Desertification,Disability)) AS rawPolicyMarkers) finalPolicyMarkers) pm
+                                               ON
+                                                     [iati-activity].ProjectId = pm.ProjectId
+                                               WHERE
+                                                     [iati-activity].[iati-activitiesID] = @ActivitiesId
+                                                     AND
+                                          [iati-activity].ComponentId IS NULL
 
                                   
                      /* Populate geolocation data along with [iati-activityID] in [IATISchema].[location]*/
@@ -1663,134 +1349,135 @@ AS
                                      ,[location-reach/@code]
                                      ,[location-class/@code]
                                      ,[feature-designation/@code])
-								select 
-									-- locationID automatic
-									ia.[iati-activityID]
-									,null as [@ref] --keep as null
-									,CASE 
-										WHEN country.[Name] is not null THEN 'A4'
-										ELSE null
-										END as [location-id/@vocabulary]
-									,CASE 
-										WHEN country.[Name] is not null THEN [administrative/@country]
-										ELSE null
-										END as [location-id/@code]
-									,null as [name/narrative/@xml:lang]
-									,ld.[name/text()]
-									,null as [description/narrative/@xml:lang]
-									,CASE 
-										WHEN country.[Name] is not null THEN 'Representation of country-level for ' + convert(varchar(max),ld.[administrative/text()])
-										ELSE convert(varchar(max),ld.[administrative/text()])
-										END as [description/narrative]
-									,null as [activity-description/narrative/@xml:lang]
-									,null as [activity-description/narrative]
-									,null as [adaministrative/@level] 
-									,CASE 
-										WHEN country.[Name] is not null THEN [administrative/@country]
-										ELSE null
-										END as [administrative/@code] 
-									,CASE 
-										WHEN country.[Name] is not null THEN 'A4'
-										ELSE null
-										END as [administrative/@vocabulary]
-									,'http://www.opengis.net/def/crs/EPSG/0/4326' as [point/@srsName]
-									,LTRIM(RTRIM(STR([coordinates/@latitude],20,20))) + ' ' + LTRIM(RTRIM(STR([coordinates/@longitude],20,20))) as [point/pos]
-									,case 
-											when ld.[coordinates/@precision] in (1,3,4,6) THEN 1
-											else 2 
-									end as [exactness/@code]
-									,2 as [location-reach/@code] --activity =1 ; beneficiary location =2
-									,case 
-											when ld.[location-type/@code] like 'PPL%' THEN 2
-											else 1   -- ADM%, PCL%
-									end AS [location-class/@code]
-									,ld.[location-type/@code] as [feature-designation/@code]
-								FROM
-									[PublicationControl].[LocationData] ld
-								Inner Join
-									[IATISchema].[iati-activity] ia
-								ON
-									ld.projectID = ia.ProjectId and ia.ComponentId IS NULL
-								left outer join
-									(select [Name] from Codelist.Country 
-										union select 'Congo (DRC)'
-										union select 'Democratic Republic of Congo' 
-										union select 'Republic of the Congo' 
-										union select 'Ivory Coast'
-										union select 'Tanzania'
-										union select 'Fiji Islands'
-										union select 'Syria'
-										union select 'Libya'
-										union select 'Bolivia'
-										union select 'FYRO Macedonia'
-										union select 'Macedonia'
-										union select 'Iran'
-										union select 'Laos'
-										union select 'Myanmar(Burma)'
-										union select 'Vietnam'
-										union select 'Venezuela'
-									) country	
-								on
-									upper(convert(varchar(max),[administrative/text()])) = country.[Name]
+                                                       select 
+                                                              -- locationID automatic
+                                                              ia.[iati-activityID]
+                                                              ,null as [@ref] --keep as null
+                                                              ,CASE 
+                                                                     WHEN country.[Name] is not null THEN 'A4'
+                                                                     ELSE null
+                                                                     END as [location-id/@vocabulary]
+                                                              ,CASE 
+                                                                     WHEN country.[Name] is not null THEN [administrative/@country]
+                                                                     ELSE null
+                                                                     END as [location-id/@code]
+                                                              ,null as [name/narrative/@xml:lang]
+                                                              ,ld.[name/text()]
+                                                              ,null as [description/narrative/@xml:lang]
+                                                              ,CASE 
+                                                                     WHEN country.[Name] is not null THEN 'Representation of country-level for ' + convert(varchar(max),ld.[administrative/text()])
+                                                                     ELSE convert(varchar(max),ld.[administrative/text()])
+                                                                     END as [description/narrative]
+                                                              ,null as [activity-description/narrative/@xml:lang]
+                                                              ,null as [activity-description/narrative]
+                                                              ,null as [adaministrative/@level] 
+                                                              ,CASE 
+                                                                     WHEN country.[Name] is not null THEN [administrative/@country]
+                                                                     ELSE null
+                                                                     END as [administrative/@code] 
+                                                              ,CASE 
+                                                                     WHEN country.[Name] is not null THEN 'A4'
+                                                                     ELSE null
+                                                                     END as [administrative/@vocabulary]
+                                                              ,'http://www.opengis.net/def/crs/EPSG/0/4326' as [point/@srsName]
+                                                              ,LTRIM(RTRIM(STR([coordinates/@latitude],20,20))) + ' ' + LTRIM(RTRIM(STR([coordinates/@longitude],20,20))) as [point/pos]
+                                                              ,case 
+                                                                           when ld.[coordinates/@precision] in (1,3,4,6) THEN 1
+                                                                           else 2 
+                                                              end as [exactness/@code]
+                                                              ,2 as [location-reach/@code] --activity =1 ; beneficiary location =2
+                                                              ,case 
+                                                                           when ld.[location-type/@code] like 'PPL%' THEN 2
+                                                                           else 1   -- ADM%, PCL%
+                                                              end AS [location-class/@code]
+                                                              ,ld.[location-type/@code] as [feature-designation/@code]
+                                                       FROM
+                                                              [PublicationControl].[LocationData] ld
+                                                       Inner Join
+                                                              [IATISchema].[iati-activity] ia
+                                                       ON
+                                                              ld.projectID = ia.ProjectId and ia.ComponentId IS NULL
+                                                       left outer join
+                                                              (select [Name] from Codelist.Country 
+                                                                     union select 'Congo (DRC)'
+                                                                     union select 'Democratic Republic of Congo' 
+                                                                     union select 'Republic of the Congo' 
+                                                                     union select 'Ivory Coast'
+                                                                     union select 'Tanzania'
+                                                                     union select 'Fiji Islands'
+                                                                     union select 'Syria'
+                                                                     union select 'Libya'
+                                                                     union select 'Bolivia'
+                                                                     union select 'FYRO Macedonia'
+                                                                     union select 'Macedonia'
+                                                                     union select 'Iran'
+                                                                     union select 'Laos'
+                                                                     union select 'Myanmar(Burma)'
+                                                                     union select 'Vietnam'
+                                                                     union select 'Venezuela'
+                                                              ) country     
+                                                       on
+                                                              upper(convert(varchar(max),[administrative/text()])) = country.[Name]
+                                                       where country.[name] is NULL
 
-					EXECUTE [PublicationControl].p_PrintProgress N'Adding geolocation data at country level from benefitting country';
+                                  -- EXECUTE [PublicationControl].p_PrintProgress N'Adding geolocation data at country level from benefitting country';
 
-					INSERT INTO [IATISchema].[location]
-                                     ([iati-activityID]
-                                     ,[@ref]
-                                     ,[location-id/@vocabulary]
-                                     ,[location-id/@code]
-                                     ,[name/narrative/@xml:lang]
-                                     ,[name/narrative]
-                                     ,[description/narrative/@xml:lang]
-                                     ,[description/narrative]
-                                     ,[activity-description/narrative/@xml:lang]
-                                     ,[activity-description/narrative]
-                                     ,[administrative/@level]
-                                     ,[administrative/@code]
-                                     ,[administrative/@vocabulary]
-                                     ,[point/@srsName]
-                                     ,[point/pos]
-                                     ,[exactness/@code]
-                                     ,[location-reach/@code]
-                                     ,[location-class/@code]
-                                     ,[feature-designation/@code])
-							select
-								-- locationID automatic
-								p.[iati-activityID]
-								,null as [@ref] --keep as null
-								,'A4' as [location-id/@vocabulary]
-								,c.[@code] as [location-id/@code]
-								,null as [name/narrative/@xml:lang]	-- usually NULL
-								,c.[text()] AS [name/narrative]
-								,null as [description/narrative/@xml:lang]	-- usually NULL
-								,'Representation of country-level for ' + convert(varchar(max),c.[text()]) AS [description/narrative]
-								,null as [activity-description/narrative/@xml:lang]	-- usually NULL
-								,null as [activity-description/narrative]				-- usually NULL
-								,null as [administrative/@level]						-- usually NULL
-								,c.[@code] as [administrative/@code]
-								,'A4' as [administrative/@vocabulary]		--A4 represents ISO code vocabulary
-								,'http://www.opengis.net/def/crs/EPSG/0/4326' as [point/@srsName]
-								,LTRIM(RTRIM(STR(pc.[coordinates/@latitude],20,20))) + ' ' + LTRIM(RTRIM(STR(pc.[coordinates/@longitude],20,20))) as [point/pos]
-								,2 as [exactness/@code]			-- approximate
-								,2 as [location-reach/@code]	-- activity location
-								,1 as [location-class/@code]	-- administrative region
-								,'ADM1' as [feature-designation/@code]
-							from IATISchema.[iati-activity] a
-							inner join IATISchema.[recipient-country] c
-							on a.[iati-activityID] = c.[iati-activityID]
-							inner join
-							(select * from IATISchema.[iati-activity] where ComponentId is null) p
-							on p.ProjectId = a.ProjectId
-							inner join PublicationControl.MappingRecipientCountryRegionToLocation pc
-							on pc.[IATICountryCode] = c.[@code]
-							where a.ProjectId not in
-							(
-								select distinct a.ProjectId from IATISchema.[iati-activity] a
-								inner join IATIschema.[location] l
-								on a.[iati-activityID] = l.[iati-activityID]
-							)
-							--and ComponentId is null
+                                  -- INSERT INTO [IATISchema].[location]
+                                  --    ([iati-activityID]
+                                  --    ,[@ref]
+                                  --    ,[location-id/@vocabulary]
+                                  --    ,[location-id/@code]
+                                  --    ,[name/narrative/@xml:lang]
+                                  --    ,[name/narrative]
+                                  --    ,[description/narrative/@xml:lang]
+                                  --    ,[description/narrative]
+                                  --    ,[activity-description/narrative/@xml:lang]
+                                  --    ,[activity-description/narrative]
+                                  --    ,[administrative/@level]
+                                  --    ,[administrative/@code]
+                                  --    ,[administrative/@vocabulary]
+                                  --    ,[point/@srsName]
+                                  --    ,[point/pos]
+                                  --    ,[exactness/@code]
+                                  --    ,[location-reach/@code]
+                                  --    ,[location-class/@code]
+                                  --    ,[feature-designation/@code])
+                                  --               select
+                                  --                      -- locationID automatic
+                                  --                      p.[iati-activityID]
+                                  --                      ,null as [@ref] --keep as null
+                                  --                      ,'A4' as [location-id/@vocabulary]
+                                  --                      ,c.[@code] as [location-id/@code]
+                                  --                      ,null as [name/narrative/@xml:lang]      -- usually NULL
+                                  --                      ,c.[text()] AS [name/narrative]
+                                  --                      ,null as [description/narrative/@xml:lang]       -- usually NULL
+                                  --                      ,'Representation of country-level for ' + convert(varchar(max),c.[text()]) AS [description/narrative]
+                                  --                      ,null as [activity-description/narrative/@xml:lang]  -- usually NULL
+                                  --                      ,null as [activity-description/narrative]                      -- usually NULL
+                                  --                      ,null as [administrative/@level]                                    -- usually NULL
+                                  --                      ,c.[@code] as [administrative/@code]
+                                  --                      ,'A4' as [administrative/@vocabulary]           --A4 represents ISO code vocabulary
+                                  --                      ,'http://www.opengis.net/def/crs/EPSG/0/4326' as [point/@srsName]
+                                  --                      ,LTRIM(RTRIM(STR(pc.[coordinates/@latitude],20,20))) + ' ' + LTRIM(RTRIM(STR(pc.[coordinates/@longitude],20,20))) as [point/pos]
+                                  --                      ,2 as [exactness/@code]                  -- approximate
+                                  --                      ,2 as [location-reach/@code]      -- activity location
+                                  --                      ,1 as [location-class/@code]      -- administrative region
+                                  --                      ,'ADM1' as [feature-designation/@code]
+                                  --               from IATISchema.[iati-activity] a
+                                  --               inner join IATISchema.[recipient-country] c
+                                  --               on a.[iati-activityID] = c.[iati-activityID]
+                                  --               inner join
+                                  --               (select * from IATISchema.[iati-activity] where ComponentId is null) p
+                                  --               on p.ProjectId = a.ProjectId
+                                  --               inner join PublicationControl.MappingRecipientCountryRegionToLocation pc
+                                  --               on pc.[IATICountryCode] = c.[@code]
+                                  --               where a.ProjectId not in
+                                  --               (
+                                  --                      select distinct a.ProjectId from IATISchema.[iati-activity] a
+                                  --                      inner join IATIschema.[location] l
+                                  --                      on a.[iati-activityID] = l.[iati-activityID]
+                                  --               )
+                                                --and ComponentId is null
 
                      /*** budgets and transactions building segments are starting from here ***/
                      
@@ -1820,11 +1507,11 @@ AS
                            AND CASE WHEN PopulationComponent.StatusFinData IN (N'HideFinData', N'HideBudgetOnly') THEN 'N' ELSE 'Y' END = 'Y'
                            AND ComponentActivityMapping.ComponentId = PopulationComponent.ComponentId
                      INNER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_BalanceTransformed WHERE VersionId=@VersionIdInternal) v_BalanceTransformed
+                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_BalanceTransformedCurrent) v_BalanceTransformed
                      ON
                            ComponentActivityMapping.ComponentId = v_BalanceTransformed.ComponentId
                      INNER JOIN 
-                           (SELECT * FROM [ProjectDataMart].AgressoSourceData.v_aglrelvalue WHERE VersionID=@VersionIdInternal) v_aglrelvalue
+                           (SELECT * FROM [ProjectDataMart].AgressoSourceData.v_aglrelvalueCurrent) v_aglrelvalue
                      ON 
                            v_BalanceTransformed.AccountCode = v_aglrelvalue.att_value and v_aglrelvalue.attribute_id = 'A0' and v_aglrelvalue.rel_attr_id = 'S14' and v_aglrelvalue.rel_value = 'yes'
                      
@@ -1890,48 +1577,7 @@ AS
                      HAVING
                            SUM(FQRange.[budget-current]) != 0
                      
-                     /* Populate aggregated budgets (commitments) along with [iati-activityID] in [IATISchema].[transaction]*/
-                     
-                     EXECUTE [PublicationControl].p_PrintProgress N'Inserting aggregated budgets (commitments) into transaction table';
-
-                     INSERT INTO
-                           [IATISchema].[transaction]
-                     (
-                           [iati-activityID]
-                           ,[IsExcluded]
-                           ,[OriginalValue]
-                           ,[value/@currency]   
-                           ,[value/@value-date] 
-                           ,[value/@type]             
-                           ,[value/text()]      
-                           ,[transaction-type/@xml:lang]
-                            ,[transaction-type/@code]
-                           ,[transaction-type/@type]
-                           ,[transaction-type/text()]
-                           ,[transaction-date/@iso-date]
-                           ,[transaction-date/text()] 
-                     )
-                     SELECT
-                           [iati-activityID]
-                           ComponentId
-                           ,0 AS IsExcluded
-                           ,SUM(BudgetCurrent) AS OriginalValue
-                           ,NULL AS [value/@currency] 
-                           ,[IATISchema].[f_ActivityActualStartDate]([iati-activityID]) AS [value/@value-date]
-                           ,NULL AS [value/@type]            
-                           ,SUM(BudgetCurrent) AS [value/text()]           
-                           ,NULL AS [transaction-type/@xml:lang]
-                           ,'2' AS [transaction-type/@code]
-                           ,NULL AS [transaction-type/@type]
-                           ,NULL AS [transaction-type/text()]
-                           ,[IATISchema].[f_ActivityActualStartDate]([iati-activityID]) AS [transaction-date/@iso-date]
-                           ,'Total Commitment to ' + Convert(nvarchar,([IATISchema].[f_ActivityActualEndDate]([iati-activityID])),106) AS [transaction-date/text()]  
-                     FROM
-                           #temp
-                     GROUP BY
-                          [iati-activityID]
-                     HAVING
-                           SUM(BudgetCurrent) != 0
+                      
                      
                      /* Dropping [PublicationControl].UnfilteredTransactions Table*/
                      
@@ -1942,258 +1588,10 @@ AS
 
                      EXECUTE [PublicationControl].p_PrintProgress N'Populating transaction with spend';
 
-                     WITH
-                           Main AS
-                     (
-                           SELECT
-                                  [iati-activity].[iati-activityID],
-                                  v_agltransact.account,
-                                  v_agltransact.amount,
-                                  v_agltransact.apar_id,
-                                  v_agltransact.apar_type,
-                                  v_agltransact.client,
-                                  v_agltransact.cur_amount,
-                                  v_agltransact.currency,
-                                  v_agltransact.dc_flag,
-                                  v_agltransact.description,
-                                  v_agltransact.dim_1,
-                                  v_agltransact.dim_4,
-                                  v_agltransact.dim_7,
-                                  v_agltransact.ext_inv_ref,
-                                  v_agltransact.ext_ref,
-                                  v_agltransact.fiscal_year,
-                                  v_agltransact.last_update,
-                                  v_agltransact.order_id,
-                                  v_agltransact.period,
-                                  v_agltransact.sequence_no,
-                                  v_agltransact.status,
-                                  v_agltransact.tax_code,
-                                  v_agltransact.tax_system,
-                                  v_agltransact.trans_date,
-                                  v_agltransact.trans_id,
-                                  v_agltransact.user_id,
-                                  v_agltransact.voucher_date,
-                                  v_agltransact.voucher_no,
-                                  v_agltransact.voucher_type,
-                                  v_agltransact.agrtid,
-                                  CASE WHEN v_agltransact.account <= '4999' THEN 'Y' ELSE 'N' END AS IsExpenditureAccount,
-                                  /* Handle promissory notes and provisions */
-                                  CASE WHEN (v_agltransact.account <= '4999' AND v_agltransact.account NOT IN ('3204','3205','3501') ) OR (v_agltransact.account IN ('6002', '6008', '6013', '6020', '6022')) THEN 'Y' ELSE 'N' END AS IsIncludedAccount,
-                                  CASE WHEN SUM(CASE WHEN v_agltransact.account IN ('6001', '6003', '6004', '6005', '6007', '6009', '6010', '6012', '6014', '6015', '6021', '6023', '6024') THEN 1 ELSE 0 END) OVER (PARTITION BY v_agltransact.client, v_agltransact.voucher_type, v_agltransact.voucher_no) > 0 THEN 'Y' ELSE 'N' END AS IsProvisionRelated,
-                                  CASE WHEN PopulationComponent.StatusFinData = N'HideFinData' THEN 'Y' ELSE 'N' END AS IsProcurementExcluded,
-                                  CASE WHEN ExclusionProject.ID IS NULL THEN 'N' ELSE 'Y' END AS IsProjectExcluded,
-                                  CASE WHEN ExclusionComponent.ID IS NULL THEN 'N' ELSE 'Y' END AS IsComponentExcluded,
-                                  CASE WHEN ExclusionAccount.AccountCode IS NULL OR ExclusionAccount.ReplacementAccountName IS NOT NULL THEN 'N' ELSE 'Y' END AS IsAccountExcluded,
-                                  CASE 
-                                         WHEN v_agltransact.voucher_type = 'RV' AND v_agltransact.voucher_date < '20150501' THEN 'Y'
-                                         WHEN ExclusionVoucherType.VoucherTypeCode IS NULL OR ExclusionVoucherType.ReplacementSupplierName IS NOT NULL THEN 'N'                                  
-                                  ELSE 'Y' END AS IsVoucherTypeExcluded,                               
-                                  CASE WHEN ExclusionBudgetCentre.BudgetCentreCode IS NULL THEN 'N' ELSE 'Y' END AS IsBudgetCentreExcluded,
-                                  /* Need to revise*/
-                                  'N' AS IsBenefittingCountryExcluded,
-                                  CASE WHEN v_agltransact.voucher_type = 'PR' AND v_agltransact.voucher_no = 400136721 THEN 'Y' ELSE 'N' END AS IsTransactionExcluded,
-                                  /* Need to revise*/
-                                  CASE
-                                         WHEN ExclusionSupplier.ID IS NOT NULL THEN 'Y' 
-                                         ELSE 'N' 
-                                  END AS IsSupplierExcluded,
-                                  CASE WHEN @EarliestTransactionDate <= v_agltransact.last_update AND v_agltransact.last_update < DATEADD(DAY, 1, @LatestTransactionDateInternal) THEN 'N' ELSE 'Y' END AS IsDateExcluded,
-                                  CASE WHEN ABS(v_agltransact.amount) >= @MinimumTransactionAmount THEN 'N' ELSE 'Y' END AS IsTransactionLineAmountExcluded,
-                                  SUM(amount) OVER (PARTITION BY v_agltransact.client, v_agltransact.voucher_type, v_agltransact.voucher_no) AS TransactionTotal,
-                                  CASE WHEN SUM(amount) OVER (PARTITION BY v_agltransact.client, v_agltransact.voucher_type, v_agltransact.voucher_no) > 25000 THEN 'Y' ELSE 'N' END AS IsGreaterThan25K,
-                                  v_asuheader.apar_name AS SupplierName,
-                                  v_acuheader.apar_name AS CustomerName,
-                                  amount AS IATIAmount,
-                                  CASE WHEN ExclusionAccount.ReplacementAccountName IS NOT NULL THEN ExclusionAccount.ReplacementAccountName ELSE v_aglaccounts.description END AS IATIAccountName,
-                                  
-                                  CASE
-                                  WHEN ExclusionVoucherType.ReplacementSupplierName IS NOT NULL THEN 'Excluded'
-                                  WHEN v_agltransact.apar_id = '' THEN 'Not available'
-                                  WHEN v_agltransact.apar_id LIKE 'S%' OR v_agltransact.apar_id LIKE 'C%' THEN 'Not available'
-                                                         WHEN ExclusionSupplierAsStaff.ID IS NOT NULL THEN 'Not available'
-                                  WHEN v_agltransact.apar_type = 'R' THEN 'Not available'
-                                  WHEN ExclusionSupplier.ID IS NOT NULL THEN 'Excluded'
-                                  WHEN ExclusionSupplierProject.ID IS NOT NULL THEN 'Excluded'
-                                  WHEN ExclusionProjectAllSupplier.ID IS NOT NULL THEN 'Excluded'
-                                  WHEN [iati-activity].BenefittingCountryCode = 'AF' THEN 'Excluded'
-                                  ELSE v_aglrelvalue.rel_value
-                                  END AS IATIChannelCode,           
-                                                                     
-                                  CASE
-                                  WHEN v_agltransact.account IN ('6002', '6008', '6013', '6020', '6022') AND v_asuheader.apar_name = 'Department for International Development' THEN 'Not available'
-                                  WHEN ExclusionVoucherType.ReplacementSupplierName IS NOT NULL THEN ExclusionVoucherType.ReplacementSupplierName
-                                  WHEN v_agltransact.apar_id = '' THEN 'Correction'
-                                  WHEN v_agltransact.apar_id LIKE 'S%' OR v_agltransact.apar_id LIKE 'C%' THEN 'Staff Member'
-                                                         WHEN ExclusionSupplierAsStaff.ID IS NOT NULL THEN 'Staff Member' 
-                                  WHEN v_agltransact.apar_type = 'R' THEN 'Customer'
-                                  WHEN ExclusionSupplier.ID IS NOT NULL THEN 'Supplier Name Withheld'
-                                  WHEN ExclusionSupplierProject.ID IS NOT NULL THEN 'Supplier Name Withheld' 
-                                  WHEN ExclusionProjectAllSupplier.ID IS NOT NULL THEN 'Supplier Name Withheld'
-                                  WHEN [iati-activity].BenefittingCountryCode = 'AF' THEN 'Supplier Name Withheld'
-                                  ELSE v_asuheader.apar_name
-                                  END AS IATICustomerSupplier
-                           FROM
-                                  [IATISchema].[iati-activity]
-                           INNER JOIN
-                                  [PublicationControl].PopulationComponent
-                           ON
-                                  PopulationComponent.PopulationId = @PopulationId
-                                  AND [iati-activity].ComponentId = PopulationComponent.ComponentId
-                           INNER JOIN
-                                  (SELECT * FROM [ProjectDataMart].AgressoSourceData.v_agltransact WHERE VersionId=@VersionIdInternal) v_agltransact
-                           ON
-                                  v_agltransact.client = 'DF'
-                                  AND [iati-activity].ComponentId = v_agltransact.dim_4
-                           INNER JOIN
-                                  (SELECT * FROM [ProjectDataMart].AgressoSourceData.v_aglaccounts WHERE VersionId=@VersionIdInternal) v_aglaccounts
-                           ON
-                                  v_aglaccounts.client = 'DF'
-                                  AND v_agltransact.account = v_aglaccounts.account
-                           LEFT OUTER JOIN
-                                  (SELECT * FROM [ProjectDataMart].AgressoSourceData.v_asuheader WHERE VersionId=@VersionIdInternal) v_asuheader
-                           ON
-                                  v_agltransact.apar_type IN ('P', '')
-                                  AND v_asuheader.client = 'DF'
-                                  AND v_agltransact.apar_id = v_asuheader.apar_id 
-                           LEFT OUTER JOIN
-                                  (SELECT * FROM [ProjectDataMart].AgressoSourceData.v_aglrelvalue WHERE VersionID=@VersionIdInternal) v_aglrelvalue
-                           ON
-                                  v_agltransact.apar_type IN ('P', '')
-                                  AND v_aglrelvalue.client = 'DF'
-                                  AND v_aglrelvalue.attribute_id = 'A5'
-                                  AND v_aglrelvalue.rel_attr_id = 'S1'
-                                  AND v_agltransact.apar_id = v_aglrelvalue.att_value
-                           LEFT OUTER JOIN
-                                  (SELECT * FROM [ProjectDataMart].AgressoSourceData.v_acuheader WHERE VersionId=@VersionIdInternal) v_acuheader
-                           ON
-                                  v_agltransact.apar_type IN ('R', '')
-                                  AND v_acuheader.client = 'DF'
-                                  AND v_agltransact.apar_id = v_acuheader.apar_id 
-                           LEFT OUTER JOIN
-                                  (SELECT * FROM [PublicationControl].[ExclusionDetails] WHERE ExclusionType='Project' AND Status='Open') ExclusionProject
-                           ON
-                                  [iati-activity].ProjectId = ExclusionProject.ID
-                           LEFT OUTER JOIN
-                                  (SELECT * FROM [PublicationControl].[ExclusionDetails] WHERE ExclusionType='Component' AND Status='Open') ExclusionComponent
-                           ON
-                                  [iati-activity].ComponentId = ExclusionComponent.ID
-                           LEFT OUTER JOIN
-                                  [PublicationControl].ExclusionAccount
-                           ON
-                                  v_agltransact.account = ExclusionAccount.AccountCode
-                           LEFT OUTER JOIN
-                                  [PublicationControl].ExclusionVoucherType
-                           ON
-                                  v_agltransact.voucher_type = ExclusionVoucherType.VoucherTypeCode
-                           LEFT OUTER JOIN
-                                  [PublicationControl].ExclusionBudgetCentre
-                           ON
-                                  v_agltransact.dim_1 = ExclusionBudgetCentre.BudgetCentreCode
-                           LEFT OUTER JOIN
-                                  /* For Blanket Level Supplier Exclusion */
-                                  (SELECT * FROM [PublicationControl].[ExclusionDetails] WHERE ExclusionType='Supplier' AND ExclusionLevel='Blanket' AND Status='Open' AND ShowStatusToPRA=1) ExclusionSupplier
-                           ON
-                                  v_agltransact.apar_type IN ('', 'P')
-                                  AND v_agltransact.apar_id = ExclusionSupplier.ID
-                                                         --New on 21/09/2016
-                                            LEFT OUTER JOIN
-                                  /* For Staff as Supplier Exclusion */
-                                  (SELECT * FROM [PublicationControl].[ExclusionDetails] WHERE ExclusionType='Supplier' AND ExclusionLevel='Blanket' AND Status='Open' AND ShowStatusToPRA=0 AND ID NOT LIKE 'S%') ExclusionSupplierAsStaff
-                           ON
-                                  v_agltransact.apar_type IN ('', 'P')
-                                  AND v_agltransact.apar_id = ExclusionSupplierAsStaff.ID 
-                           LEFT OUTER JOIN
-                                  /* For Project Level Supplier Exclusion */
-                                  (SELECT * FROM [PublicationControl].[ExclusionDetails] WHERE ExclusionType='Supplier' AND ExclusionLevel='Project' AND Status='Open' AND ShowStatusToPRA=1) ExclusionSupplierProject
-                           ON
-                                  [iati-activity].ProjectId = ExclusionSupplierProject.ParentProjectID
-                                  AND v_agltransact.apar_id = ExclusionSupplierProject.ID
-                           LEFT OUTER JOIN
-                                  /*For all the supplier exclusion under a specific project*/
-                                  (SELECT * FROM [PublicationControl].[ExclusionDetails] WHERE ExclusionType='Supplier' AND ExclusionLevel='project-blanket' AND Status='Open') ExclusionProjectAllSupplier
-                           ON
-                                  [iati-activity].ProjectId = ExclusionProjectAllSupplier.ParentProjectID
-                           WHERE
-                                  [iati-activity].[iati-activitiesId] = 101
-                                  AND [iati-activity].ComponentId IS NOT NULL
-                     )
-                     SELECT
-                           *,
-                           CASE WHEN
-                                  IsIncludedAccount = 'Y'
-                                  AND IsProvisionRelated = 'N'
-                                  AND IsProcurementExcluded = 'N'
-                                  AND IsProjectExcluded = 'N'
-                                  AND IsComponentExcluded = 'N'
-                                  AND IsAccountExcluded = 'N'
-                                  AND IsVoucherTypeExcluded = 'N'
-                                  AND IsBudgetCentreExcluded = 'N'
-                                  AND IsBenefittingCountryExcluded = 'N'
-                                  AND IsTransactionExcluded = 'N'
-                                  AND IsDateExcluded = 'N'
-                                  AND IsTransactionLineAmountExcluded = 'N'
-                           THEN
-                                  'Y'
-                           ELSE
-                                  'N'
-                           END AS IsIncluded
-                     INTO
-                           [PublicationControl].UnfilteredTransactions
-                     FROM
-                           Main
-                     OPTION
-                           (RECOMPILE)
+                     /*Prepare logic to populate the [PublicationControl].UnfilteredTransactions table with raw transaction data along with their publishable state.*/
                      
                      /* Publish transactions related to emergency humanitarian aid in [PublicationControl].UnfilteredTransactions*/
                      
-                     UPDATE [PublicationControl].UnfilteredTransactions
-                     SET IsIncluded = 'Y'
-                     WHERE dim_4 IN (SELECT ComponentId 
-                                                FROM [PublicationControl].UnfilteredTransactions Tr
-                                                INNER JOIN
-                                                [PublicationControl].EmergencyAidComponents Eac
-                                                ON 
-                                                Tr.dim_4 = Eac.ComponentId
-                                                Group By ComponentId)      
-  
-                                                                                /* Handling labelling of Promissory Notes */
-                                                                                EXECUTE [PublicationControl].p_PrintProgress N'Updating labels for Promissory Notes';
-                                                                  
-                                                                                -- 1. Create Temp table to merge in unfiltered transactions plus supplier details from #CSM
-                                                                                IF OBJECT_ID('tempdb..#unfiltered_supplier', 'U') IS NOT NULL
-                                                                                                DROP TABLE #unfiltered_supplier
-                                                                                               
-                                                                                select * into #unfiltered_supplier from (
-                                                                                select u.*,s.apar_name,p.* 
-                                                                                from PublicationControl.UnfilteredTransactions u
-                                                                                left outer join [PublicationControl].[NonPOSupplierMap] csm
-                                                                                on csm.ComponentID = u.dim_4
-                                                                                left outer join [ProjectDataMart].[AgressoSourceData].[v_asuheaderCurrent] s
-                                                                                on s.apar_id = csm.SupplierId
-                                                                                left outer join [PublicationControl].[MappingParticipatingOrg] p
-                                                                                on p.DFIDSupplierId = s.apar_id
-                                                                                where u.IATIAccountName = 'Promissory Note deposit'
-                                                                                and IsIncluded = 'Y'
-                                                                                ) unfiltered_supplier 
-
-                                                                                -- 2. Update PublicationControl.UnfilteredTransactions with the new label
-                                                                                update u
-                                                                                set 
-                                                                                                u.IATICustomerSupplier = us.apar_name, 
-                                                                                                u.IATIChannelCode = us.IATIIdentifier
-                                                                                from PublicationControl.UnfilteredTransactions u 
-                                                                                join #unfiltered_supplier us on (us.agrtid = u.agrtid)
-                                                                                where u.IATICustomerSupplier in ('Journal Transaction','Department for International Development')
-                                                                                and u.IATIAccountName = 'Promissory Note deposit'
-
-                                                                                -- 3. Remove specific transactions to make the dataset simpler
-                                                                                -- Add the voucher_numbers to PublicationControl.ExclusionTransaction and they get marked as IsIncluded='N'?
-                                                                                update u
-                                                                                set 
-                                                                                                u.IsIncluded = 'N' 
-                                                                                from PublicationControl.UnfilteredTransactions u 
-                                                                                join PublicationControl.ExclusionTransaction et on (et.VoucherNumber = u.voucher_no)
-                                                                                where ExclusionTransactionId > 4 -- to avoid historic issues
 
                      EXECUTE [PublicationControl].p_PrintProgress N'Finished updating labels for Promissory Notes';
                      
@@ -2201,96 +1599,10 @@ AS
                                          
                      EXECUTE [PublicationControl].p_PrintProgress N'Finished populating transaction with spend';
 
-                     INSERT INTO [IATISchema].[transaction]
+                     /* INSERT INTO [IATISchema].[transaction]
                      (
                            [iati-activityID]
-                           ,[IsExcluded]
-                          ,[OriginalValue]
-                           ,[value/@currency]
-                           ,[value/@value-date]
-                           ,[value/@type]
-                           ,[value/text()]
-                           ,[transaction-type/@xml:lang]
-                           ,[transaction-type/@code]
-                           ,[transaction-type/@type]
-                           ,[transaction-type/text()]
-                           ,[provider-org/@xml:lang]
-                           ,[provider-org/@ref]
-                           ,[provider-org/@type]
-                           ,[provider-org/@provider-activity-id]
-                           ,[provider-org/text()]
-                           ,[receiver-org/@xml:lang]
-                           ,[receiver-org/@ref]
-                           ,[receiver-org/@type]
-                           ,[receiver-org/@receiver-activity-id]
-                           ,[receiver-org/text()]
-                           ,[description/@xml:lang]
-                           ,[description/text()]
-                           ,[transaction-date/@iso-date]
-                           ,[tied-status/@xml:lang]
-                           ,[tied-status/@code]
-                           ,[tied-status/@type]
-                           ,[tied-status/text()]
-                     )
-                     SELECT
-                           UnfilteredTransactions.[iati-activityID] AS [iati-activityID]
-                           ,0 AS [IsExcluded]
-                           ,UnfilteredTransactions.[amount] AS [OriginalValue]
-                           ,'GBP' AS [value/@currency]
-                           ,UnfilteredTransactions.last_update AS [value/@value-date]
-                           ,NULL AS [value/@type]
-                           ,UnfilteredTransactions.[amount] AS [value/text()]
-                           ,NULL AS [transaction-type/@xml:lang]
-                           , CASE 
-                                                                                                                   WHEN AccountGroup.account = 2402 THEN 8 -- Purchase Of Equity
-                                                                                                                   WHEN AccountGroup.account = 3403 THEN 5 -- Interest Repayment
-                                                                                                                   WHEN AccountGroup.account = 3402 THEN 6 -- Loan Repayment
-                                                                                                                   WHEN AccountGroup.account = 2400 THEN 4 -- Expenditure
-                                                                                                                   WHEN AccountGroup.account = 2370 THEN 4   -- Incoming Funds now Expenditure
-                                                                                                                   WHEN AccountGroup.account_grp IN (300,340,370) THEN 4 -- Incoming Funds now Expenditure
-                                                                                                                   WHEN AccountGroup.account_grp IN (230,232,234,236,238,240) THEN 3 -- Disbursement           
-                                                                                                                   ELSE 4 -- Expenditure
-                                                                                                                END AS [transaction-type/@code]                                                                                            
-                           ,NULL AS [transaction-type/@type]
-                           ,NULL AS [transaction-type/text()]
-                           ,NULL AS [provider-org/@xml:lang]
-                           ,@DFIDOrganisationIdentifier AS [provider-org/@ref]
-                           ,NULL AS [provider-org/@type]
-                           ,NULL AS [provider-org/@provider-activity-id]
-                           ,NULL AS [provider-org/text()]
-                           ,NULL AS [receiver-org/@xml:lang]
-                           ,UnfilteredTransactions.IATIChannelCode AS [receiver-org/@ref]
-                           ,NULL AS [receiver-org/@type]
-                           ,NULL AS [receiver-org/@receiver-activity-id]
-                           ,UnfilteredTransactions.IATICustomerSupplier AS [receiver-org/text()]
-                           ,NULL AS [description/@xml:lang]
-                           ,IATIAccountName AS [description/text()]
-                           ,UnfilteredTransactions.last_update AS [transaction-date/@iso-date]
-                           /* all DFID aid is untied, which we pick up from the activity */
-                           ,NULL AS [tied-status/@xml:lang]
-                           ,NULL AS [tied-status/@code]
-                           ,NULL AS [tied-status/@type]
-                           ,NULL AS [tied-status/text()]
-                     FROM
-                           [PublicationControl].UnfilteredTransactions 
-                    INNER JOIN 
-                                    (Select * From [Agresso].[dbo].aglaccounts WHERE client  = 'DF') AccountGroup
-                    ON 
-                                        UnfilteredTransactions.account = AccountGroup.account
-                     LEFT OUTER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTransformed WHERE VersionId=@VersionIdInternal) v_ComponentTransformed
-                     ON
-                           UnfilteredTransactions.dim_4 = v_ComponentTransformed.ComponentId
-                     WHERE
-                          UnfilteredTransactions.IsIncluded = 'Y'
-
-                     /* Populate aggregated transactions (Expenditure Items) Before 12th May 2010 along with [iati-activityID] in [IATISchema].[transaction]*/
-
-                     EXECUTE [PublicationControl].p_PrintProgress N'Populating aggregated transactions (Expenditure Items) pre 12th May 2010'
-                     
-                     INSERT INTO [IATISchema].[transaction]
-                     (      
-                           [iati-activityID]
+                           ,[@ref]
                            ,[IsExcluded]
                            ,[OriginalValue]
                            ,[value/@currency]
@@ -2318,202 +1630,33 @@ AS
                            ,[tied-status/@code]
                            ,[tied-status/@type]
                            ,[tied-status/text()]
-                     )
-                     SELECT
-                           UnfilteredTransactions.[iati-activityID] AS [iati-activityID]
-                           ,0 AS [IsExcluded]
-                           ,SUM(UnfilteredTransactions.[amount]) AS [OriginalValue]
-                           ,'GBP' AS [value/@currency]
-                           ,CASE 
-                                  WHEN UnfilteredTransactions.fiscal_year = '2010' THEN Configuration.f_MakeDate(Max(UnfilteredTransactions.fiscal_year), 5, 11)
-                                  WHEN PublicationControl.f_QuarterValue(voucher_date) = 1 THEN Configuration.f_MakeDate(Max(UnfilteredTransactions.fiscal_year),6, 30)
-                                  WHEN PublicationControl.f_QuarterValue(voucher_date) = 2 THEN Configuration.f_MakeDate(Max(UnfilteredTransactions.fiscal_year),9, 30)
-                                  WHEN PublicationControl.f_QuarterValue(voucher_date) = 3 THEN Configuration.f_MakeDate(Max(UnfilteredTransactions.fiscal_year),12, 31)
-                                  ELSE Configuration.f_MakeDate(Max(UnfilteredTransactions.fiscal_year)+1,3, 31)
-                           END
-                           AS [value/@value-date]
-                           ,NULL AS [value/@type]
-                           ,SUM(UnfilteredTransactions.[amount]) AS [value/text()]
-                           ,NULL AS [transaction-type/@xml:lang]
-                           ,'4' AS [transaction-type/@code]
-                           ,NULL AS [transaction-type/@type]
-                           ,NULL AS [transaction-type/text()]
-                           ,NULL AS [provider-org/@xml:lang]
-                           ,@DFIDOrganisationIdentifier AS [provider-org/@ref] 
-                           ,NULL AS [provider-org/@type]
-                           ,NULL AS [provider-org/@provider-activity-id]
-                           ,NULL AS [provider-org/text()]
-                           ,NULL AS [receiver-org/@xml:lang]
-                           ,NULL AS [receiver-org/@ref]
-                           ,NULL AS [receiver-org/@type]
-                           ,NULL AS [receiver-org/@receiver-activity-id]
-                           ,NULL [receiver-org/text()]
-                           ,NULL AS [description/@xml:lang]
-                           ,CASE 
-                                  WHEN UnfilteredTransactions.fiscal_year = '2010' THEN 'Aggregated spend data - Financial Year 2010 Quarter 1 (prior to 12th May 2010)'
-                                  ELSE 'Aggregated spend data - Financial Year ' + CONVERT(nvarchar,(Max(UnfilteredTransactions.fiscal_year))) + ' Quarter ' + CONVERT(nvarchar,(Max(PublicationControl.f_QuarterValue(voucher_date))))
-                           END
-                           AS [description/text()]
-                           ,CASE 
-                                  WHEN UnfilteredTransactions.fiscal_year = '2010' THEN Configuration.f_MakeDate(Max(UnfilteredTransactions.fiscal_year), 5, 11)
-                                  WHEN PublicationControl.f_QuarterValue(voucher_date) = 1 THEN Configuration.f_MakeDate(Max(UnfilteredTransactions.fiscal_year),6, 30)
-                                  WHEN PublicationControl.f_QuarterValue(voucher_date) = 2 THEN Configuration.f_MakeDate(Max(UnfilteredTransactions.fiscal_year),9, 30)
-                                  WHEN PublicationControl.f_QuarterValue(voucher_date) = 3 THEN Configuration.f_MakeDate(Max(UnfilteredTransactions.fiscal_year),12, 31)
-                                  ELSE Configuration.f_MakeDate(Max(UnfilteredTransactions.fiscal_year)+1,3, 31)
-                           END
-                           AS [transaction-date/@iso-date]
-                           ,NULL AS [tied-status/@xml:lang]
-                           ,NULL AS [tied-status/@code]
-                           ,NULL AS [tied-status/@type]
-                           ,NULL AS [tied-status/text()]            
-                     FROM
-                           [PublicationControl].UnfilteredTransactions
-                     LEFT OUTER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTransformed WHERE VersionId=@VersionIdInternal) v_ComponentTransformed
-                     ON
-                           UnfilteredTransactions.dim_4 = v_ComponentTransformed.ComponentId
-                     WHERE
-                           UnfilteredTransactions.last_update < '2010-05-12 00:00:00'
-                           and UnfilteredTransactions.IsIncludedAccount = 'Y'
-                           and UnfilteredTransactions.IsProvisionRelated = 'N'
-                           and UnfilteredTransactions.IsProcurementExcluded = 'N'
-                           and UnfilteredTransactions.IsProjectExcluded = 'N'
-                           and UnfilteredTransactions.IsComponentExcluded = 'N'
-                           and UnfilteredTransactions.IsAccountExcluded = 'N'
-                           and UnfilteredTransactions.IsVoucherTypeExcluded = 'N' 
-                           and UnfilteredTransactions.IsBudgetCentreExcluded = 'N'
-                           and UnfilteredTransactions.IsBenefittingCountryExcluded = 'N'
-                           and UnfilteredTransactions.IsTransactionExcluded = 'N'
-                     Group By
-                           UnfilteredTransactions.[iati-activityID], UnfilteredTransactions.fiscal_year, PublicationControl.f_QuarterValue(voucher_date)
-              
-                     
-                     /* Populate aggregated transactions with a value less than £500 along with [iati-activityID] in [IATISchema].[transaction]*/
-                     
-                     EXECUTE [PublicationControl].p_PrintProgress N'Populating quarterly aggregated transactions (Expenditure Items) for values less than £500'
-                     
-                     INSERT INTO [IATISchema].[transaction]
-                     (      
-                           [iati-activityID]
-                           ,[IsExcluded]
-                           ,[OriginalValue]
-                           ,[value/@currency]
-                           ,[value/@value-date]
-                           ,[value/@type]
-                           ,[value/text()]
-                           ,[transaction-type/@xml:lang]
-                           ,[transaction-type/@code]
-                           ,[transaction-type/@type]
-                           ,[transaction-type/text()]
-                           ,[provider-org/@xml:lang]
-                           ,[provider-org/@ref]
-                           ,[provider-org/@type]
-                           ,[provider-org/@provider-activity-id]
-                           ,[provider-org/text()]
-                           ,[receiver-org/@xml:lang]
-                           ,[receiver-org/@ref]
-                           ,[receiver-org/@type]
-                           ,[receiver-org/@receiver-activity-id]
-                           ,[receiver-org/text()]
-                           ,[description/@xml:lang]
-                           ,[description/text()]
-                           ,[transaction-date/@iso-date]
-                            ,[tied-status/@xml:lang]
-                           ,[tied-status/@code]
-                           ,[tied-status/@type]
-                           ,[tied-status/text()]
-                     )
-                     SELECT
-                           LT500.[iati-activityID] AS [iati-activityID]
-                           ,0 AS [IsExcluded]
-                           ,SUM(LT500.[amount]) AS [OriginalValue] --Sum this
-                           ,'GBP' AS [value/@currency]
-                           ,CASE 
-                                  WHEN PublicationControl.f_QuarterValue(LT500.voucher_date) = 1 THEN Configuration.f_MakeDate(Max(LT500.fiscal_year),4, 1)
-                                  WHEN PublicationControl.f_QuarterValue(LT500.voucher_date) = 2 THEN Configuration.f_MakeDate(Max(LT500.fiscal_year),7, 1)
-                                  WHEN PublicationControl.f_QuarterValue(LT500.voucher_date) = 3 THEN Configuration.f_MakeDate(Max(LT500.fiscal_year),10, 1)
-                                  ELSE Configuration.f_MakeDate(Max(LT500.fiscal_year)+1,1, 1)
-                           END
-                           AS [value/@value-date]
-                           ,NULL AS [value/@type]
-                           ,SUM(LT500.[amount]) AS [value/text()]
-                           ,NULL AS [transaction-type/@xml:lang]
-                           ,'4' AS [transaction-type/@code]
-                           ,NULL AS [transaction-type/@type]
-                           ,NULL AS [transaction-type/text()]
-                           ,NULL AS [provider-org/@xml:lang]
-                           ,@DFIDOrganisationIdentifier AS [provider-org/@ref]
-                           ,NULL AS [provider-org/@type] 
-                           ,NULL AS [provider-org/@provider-activity-id]
-                           ,NULL AS [provider-org/text()]
-                           ,NULL AS [receiver-org/@xml:lang]
-                           ,NULL AS [receiver-org/@ref]
-                           ,NULL AS [receiver-org/@type]
-                           ,NULL AS [receiver-org/@receiver-activity-id]
-                           ,NULL [receiver-org/text()]
-                           ,NULL AS [description/@xml:lang]
-                           ,'Aggregated spend of less than £500 - Financial Year ' + CONVERT(nvarchar,(Max(LT500.fiscal_year))) + ' Quarter ' + CONVERT(nvarchar,(Max(PublicationControl.f_QuarterValue(voucher_date))))
-                             AS [description/text()]
-                           ,CASE 
-                                  WHEN PublicationControl.f_QuarterValue(LT500.voucher_date) = 1 THEN Configuration.f_MakeDate(Max(LT500.fiscal_year),4, 1)
-                                  WHEN PublicationControl.f_QuarterValue(LT500.voucher_date) = 2 THEN Configuration.f_MakeDate(Max(LT500.fiscal_year),7, 1)
-                                  WHEN PublicationControl.f_QuarterValue(LT500.voucher_date) = 3 THEN Configuration.f_MakeDate(Max(LT500.fiscal_year),10, 1)
-                                  ELSE Configuration.f_MakeDate(Max(LT500.fiscal_year)+1,1, 1)
-                           END
-                           AS [transaction-date/@iso-date]
-                           ,NULL AS [tied-status/@xml:lang]
-                           ,NULL AS [tied-status/@code]
-                           ,NULL AS [tied-status/@type]
-                           ,NULL AS [tied-status/text()]
-                     FROM
-                     (Select *  
-                      From [PublicationControl].UnfilteredTransactions
-                     Where IsIncludedAccount = 'Y'
-                             AND IsProvisionRelated = 'N'
-                             AND IsProcurementExcluded = 'N'
-                             AND IsProjectExcluded = 'N'
-                             AND IsComponentExcluded = 'N'
-                             AND IsAccountExcluded = 'N'
-                             AND IsVoucherTypeExcluded = 'N'
-                             AND IsBudgetCentreExcluded = 'N'
-                             AND IsBenefittingCountryExcluded = 'N'
-                             AND IsTransactionExcluded = 'N'
-                             AND IsDateExcluded = 'N'
-                             AND IsTransactionLineAmountExcluded = 'Y'
-                             AND IsIncluded = 'N') As LT500
-                     GROUP BY LT500.[iati-activityID], LT500.fiscal_year, PublicationControl.f_QuarterValue(LT500.voucher_date)
-              
-					 
-					 /* Store participating-org & implementing role along with [iati-activityID] in [IATISchema].[participating-org] based on Disbursement and Purchase of Equity transactions*/
-					 EXECUTE [PublicationControl].p_PrintProgress N'Populating participating-org with implmenting organisations'       
+                     ) */
+                     /*Write logic to select publishable data from [PublicationControl].UnfilteredTransactions table and push them to the transactions table here.*/
 
-					 INSERT INTO [IATISchema].[participating-org]
+         
+              
+
+          /* Populate Commitment data using the sum values of the Purchase Orders per supplier along with [iati-activityID] into [IATISchema].[transaction]*/
+                     
+                     EXECUTE [PublicationControl].p_PrintProgress N'Inserting Commitment data (calculated using the sum value of the Purchase Orders per supplier) into transaction table';
+
+           /*Write logic to add committment transactions to the transaction table*/
+              
+          /* Store participating-org & implementing role along with [iati-activityID] in [IATISchema].[participating-org] based on Disbursement and Purchase of Equity transactions*/
+          EXECUTE [PublicationControl].p_PrintProgress N'Populating participating-org with implmenting organisations'       
+
+          /* INSERT INTO [IATISchema].[participating-org]
                      (
                        --[participating-orgID] (autopopulated)
                        [iati-activityID]
                        ,[@xml:lang]
                        ,[@ref]
-                       ,[@type]
+                       ,[@type] 
                        ,[@role]
                        ,[text()]
-                      )
-					  SELECT    
-							t.[iati-activityID] AS [iati-activityID]
-								,NULL AS [@xml:lang]
-								,CASE WHEN mpo.IATIIdentifier IS NOT NULL THEN mpo.IATIIdentifier ELSE NULL END AS [@ref]
-								,NULL AS [@type]
-							   ,'4' AS [@role]
-							   , CASE WHEN (t.[receiver-org/text()] LIKE '%UNICEF%' OR t.[receiver-org/text()] = 'United Nation’s Children Fund' ) THEN 'United Nations Children’s Fund (UNICEF)' ELSE t.[receiver-org/text()] END AS [text()]         
-					   FROM (SELECT [iati-activityID] ,[receiver-org/text()] FROM [IATISchema].[transaction] WHERE ([transaction-type/@code] = 3  OR [transaction-type/@code] = 8) GROUP BY [iati-activityID] ,[receiver-org/text()] ) t
-					   LEFT JOIN 
-							[PublicationControl].[ExclusionParticipatingOrg] epo
-					    ON REPLACE(t.[receiver-org/text()],' ','') = REPLACE(epo.ParticipatingOrgName,' ','')
-						LEFT OUTER JOIN
-							[PublicationControl].[MappingParticipatingOrg] mpo
-						ON 
-							REPLACE(t.[receiver-org/text()],' ','') = REPLACE(mpo.SupplierHqDescription,' ','')
-						WHERE epo.ParticipatingOrgName IS NULL AND t.[receiver-org/text()] IS NOT NULL
-												          
+                      ) */
+                    /*  Put logic to generate and select data from the raw tables*/
+                                                                                            
                      
                      EXECUTE [PublicationControl].p_PrintProgress N'Populating conditions for all projects'
        
@@ -2522,22 +1665,7 @@ AS
               
                      /* Populate conditions info for all Projects along with [iati-activityID] in [IATISchema].conditions */
                      
-                     --SELECT
-                     --      [iati-activityID]
-                     --      ,CASE
-                     --             WHEN [PublicationControl].[f_HasSpecificConditions](ProjectId) = 1 THEN 1
-                     --             WHEN [PublicationControl].[f_HasBudgetSupport](ProjectId) = 1 THEN 1             
-                     --             ELSE 0
-                     --      END AS [@attached]
-                     --      ,CASE
-                     --             WHEN [PublicationControl].[f_HasSpecificConditions](ProjectId) = 1 AND [PublicationControl].[f_HasBudgetSupport](ProjectId) = 1 THEN 'C'
-                     --             WHEN [PublicationControl].[f_HasSpecificConditions](ProjectId) = 1 THEN 'S'
-                     --             WHEN [PublicationControl].[f_HasBudgetSupport](ProjectId) = 1 THEN 'G'
-                     --             ELSE NULL
-                     --      END AS [condtionFlag]
-                     --FROM
-                     --      [IATISchema].[iati-activity] 
-                     --WHERE [@hierarchy] = 1
+                     
                                   INSERT @StagedData
                                          SELECT
                                                 [iati-activityID] ,
@@ -2642,22 +1770,12 @@ AS
                      
                      EXECUTE [PublicationControl].p_PrintProgress N'Populating capital spend for all components'
                      
-                     INSERT INTO [IATISchema].[capital-spend] 
+                     /* INSERT INTO [IATISchema].[capital-spend] 
                      (
                            [iati-activityID] 
                            ,[@percentage] 
-                     )
-                     SELECT
-                           [iati-activityID]
-                           ,CASE
-                                  WHEN b.SpendTypeCode in ('C', 'PC', 'CAME') THEN 100
-                                  ELSE 0
-                           END AS [@percentage]
-                     FROM [ProjectDataMart].AgressoTransformation.v_ComponentTransformedCurrent c
-                     inner join [ProjectDataMart].AgressoTransformation.v_BudgetCentreTransformedCurrent b
-                     on c.BudgetCentreCode = b.BudgetCentreCode
-                     inner join [IATISchema].[iati-activity] a
-                     on a.[ComponentId] = c.[ComponentId]
+                     ) */
+                     /*  Put logic to generate and select data from the raw tables*/
                      
                      
                      
@@ -2735,7 +1853,7 @@ AS
                      FROM
                            @ComponentActivityMapping ComponentActivityMapping
                      LEFT OUTER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ProjectTransformed WHERE VersionId=@VersionIdInternal) v_ProjectTransformed
+                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ProjectTransformedCurrent) v_ProjectTransformed
                      ON
                            ComponentActivityMapping.ProjectId = v_ProjectTransformed.ProjectId
                      
@@ -2768,7 +1886,7 @@ AS
                      ON
                            ProjectActivityMapping.ProjectId = ComponentActivityMapping.ProjectId
                      INNER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTransformed WHERE VersionId=@VersionIdInternal) v_ComponentTransformed
+                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTransformedCurrent) v_ComponentTransformed
                      ON
                            ComponentActivityMapping.ComponentId = v_ComponentTransformed.ComponentId
                      
@@ -2802,7 +1920,7 @@ AS
                            component.ProjectId = sibling_component.ProjectId
                            AND component.ComponentId != sibling_component.ComponentId
                      INNER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTransformed WHERE VersionId=@VersionIdInternal) v_ComponentTransformed
+                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentTransformedCurrent) v_ComponentTransformed
                      ON
                           sibling_component.ComponentId = v_ComponentTransformed.ComponentId
 
@@ -2872,7 +1990,7 @@ AS
                        ON 
                        publishedDocs.[Language] = questLanguage.QuestLanguage
                        INNER JOIN
-					   --LEFT OUTER JOIN
+                                     --LEFT OUTER JOIN
                        @ProjectActivityMapping ProjectActivityMapping
                       ON
                        publishedDocs.ProjectID = ProjectActivityMapping.ProjectId
@@ -2907,7 +2025,7 @@ AS
                                          docLink.[@LastUpdated-Month-Year] IS NOT NULL
                                   THEN  
                                     /*' (' + docLink.[@LastUpdated-Month-Year] + ')'*/
-									' (Published - ' + docLink.[@LastUpdated-Month-Year] + ')'
+                                                              ' (Published - ' + docLink.[@LastUpdated-Month-Year] + ')'
                                 ELSE
                                     ''
                                 END
@@ -2915,10 +2033,10 @@ AS
                               AS [text()]
                      FROM [IATISchema].[document-link] docLink
                            INNER JOIN
-						  [IATISchema].[iati-activity] activity
-						  ON
-						   activity.[iati-activityID] = docLink.[iati-activityID]
-					 INNER JOIN
+                                           [IATISchema].[iati-activity] activity
+                                           ON
+                                            activity.[iati-activityID] = docLink.[iati-activityID]
+                                  INNER JOIN
                            [PublicationControl].PublishedDocuments publishedDocs
                            ON 
                             (docLink.QuestID = publishedDocs.QuestID AND activity.ProjectId=publishedDocs.ProjectID)
@@ -2945,10 +2063,10 @@ AS
                      FROM
                            [IATISchema].[document-link] docLink
                      INNER JOIN
-						  [IATISchema].[iati-activity] activity
-						  ON
-						   activity.[iati-activityID] = docLink.[iati-activityID]
-					 INNER JOIN
+                                           [IATISchema].[iati-activity] activity
+                                           ON
+                                            activity.[iati-activityID] = docLink.[iati-activityID]
+                                  INNER JOIN
                            [PublicationControl].PublishedDocuments publishedDocs
                            ON 
                             (docLink.QuestID = publishedDocs.QuestID AND activity.ProjectId=publishedDocs.ProjectID)
@@ -3343,12 +2461,12 @@ AS
                      FROM
                            @ComponentActivityMapping ComponentActivityMapping
                      INNER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentInputSectorTransformed WHERE VersionId=@VersionIdInternal) v_ComponentInputSectorTransformed
+                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_ComponentInputSectorTransformedCurrent) v_ComponentInputSectorTransformed
                      ON
                            v_ComponentInputSectorTransformed.Percentage != 0
                            AND ComponentActivityMapping.ComponentId = v_ComponentInputSectorTransformed.ComponentId
                      INNER JOIN
-                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_InputSectorTransformed WHERE VersionId=@VersionIdInternal) v_InputSectorTransformed
+                            (SELECT * FROM [ProjectDataMart].AgressoTransformation.v_InputSectorTransformedCurrent) v_InputSectorTransformed
                      ON
                            v_ComponentInputSectorTransformed.InputSectorCode = v_InputSectorTransformed.InputSectorCode
 
@@ -3529,7 +2647,7 @@ AS
                      /*** Add Implementing Organisation information to Projects ***/
                      EXECUTE [PublicationControl].p_PrintProgress N'Populating [IATISchema].[participating-org] with participating organisations at the project level'
                                   
-                     INSERT INTO
+                     /* INSERT INTO
                            [IATISchema].[participating-org]
                      (
                            --[participating-orgID]
@@ -3538,53 +2656,16 @@ AS
                            ,[@ref]
                            ,[@type]
                            ,[@role]
-                                                                                                   ,[text()]
-                     )
-                     SELECT 
-							projList.[iati-activityID],
-							projList.[@xml:lang],
-							CASE 
-							WHEN [@ref] = 'GB' THEN [@ref]
-							WHEN [@ref] = 'GB-GOV-1' THEN [@ref]
-							WHEN ia.benefittingcountrycode = 'AF' THEN NULL
-										ELSE [@ref] END AS [@ref],
-							CASE
-							WHEN [@ref] = 'GB' THEN [@type]
-							WHEN [@ref] = 'GB-GOV-1' THEN [@type] 
-							WHEN ia.benefittingcountrycode = 'AF' THEN NULL
-											ELSE [@type] END AS [@type],
-							CASE 
-							WHEN [@ref] = 'GB' THEN [@role]
-							WHEN [@ref] = 'GB-GOV-1' THEN [@role]
-							WHEN ia.benefittingcountrycode = 'AF' THEN '4'
-							else [@role] end as [@role],
-							CASE 
-							WHEN [@ref] = 'GB' THEN [text()]
-							WHEN [@ref] = 'GB-GOV-1' THEN [text()]
-							WHEN ia.benefittingcountrycode = 'AF' THEN 'Name Withheld'
-											ELSE [text()] END AS [text()]
-										from (SELECT 
-													iaProj.[iati-activityID] AS [iati-activityID]
-													,NULL AS [@xml:lang]
-													,po.[@ref] AS [@ref]
-													,po.[@type] AS [@type]
-													,po.[@role] AS [@role]
-													,po.[text()] AS [text()]
-										FROM [IATISchema].[participating-org] po
-										INNER JOIN       
-															[IATISchema].[iati-activity] ia
-										ON     
-															ia.[iati-activityID] = po.[iati-activityID]
-										INNER JOIN       
-															(SELECT * 
-															FROM [IATISchema].[iati-activity]
-															WHERE ComponentId IS NULL) AS iaProj
-										ON     
-															ia.[ProjectId] = iaProj.[ProjectId]
-										WHERE po.[@type] IS NULL and po.[@role] = '4'
-										GROUP BY iaProj.[iati-activityID], iaProj.[ProjectId], po.[@ref], po.[@type], po.[@role],[text()]) projList
-							left outer join [IATISchema].[iati-activity] ia
-										on projList.[iati-activityID] = ia.[iati-activityID]
+                           ,[text()]
+                     ) */
+                     /*  Put logic to generate and select data from the raw tables*/
+
+/* ======================================================================================================================
+   POPULATE COMPONENT HUMANITARIAN FIELD 
+   ====================================================================================================================== */
+                    EXECUTE [PublicationControl].p_PrintProgress N'Populating the humanitarian flag based on Sector analysis'
+
+                                  /*  Put logic to generate and select data from the raw tables*/
 
                      
 
@@ -3598,115 +2679,136 @@ AS
                      (
                            [iati-activityID]    
                            ,[@xml:lang]
-						   ,[@type]               
+                                            ,[@type]               
                            ,[text()]                  
                      )
- 					SELECT
-						a.[iati-activityID]
-						,null
-						,null
-						,'This activity (' + rtrim(t.[text()]) + ') is a component of ' + rtrim(r.[text()]) + ' reported by DFID'
-						+ ', with a funding type of ' + '''' + LTRIM(SUBSTRING(d.[description], 6, 99))  + '''' + ' '
-						+ 'and a budget of £' + LEFT(convert(varchar(50), cast(b.componentbudget as money), -1),LEN(convert(varchar(50), cast(b.componentbudget as money), -1))-3) + '. '
-						+ CASE 
-							WHEN rc.[text()] is not null THEN 'This component benefits ' + rc.[text()] + ', ' 
-							WHEN rr.[@code] is not null THEN 'This component benefits ' + clr.[Name] + ', ' 
-							ELSE '' 
-						END 
-						+ 'and works in the following sector(s): ' + s.sector
-						+ CASE
-							WHEN Implementers.imp is not null THEN
-								', with the following implementing partners: ' + Implementers.imp + '. '
-							ELSE ''
-						END
-						+ CASE
-							WHEN PlannedStart.[@iso-date] is not null and PlannedEnd.[@iso-date] is not null THEN 
-							'The start date is ' + convert(varchar,PlannedStart.[@iso-date],105) + ' and the end date is ' + convert(varchar,PlannedEnd.[@iso-date],105) + '.'
-							ELSE ''
-						END
-						AS ComponentDescription
-					from IATISchema.[iati-activity] a
-					-- related activity
-					inner join (select * from IATISchema.[related-activity] where [@type] = 1) r
-					on a.[iati-activityID] = r.[iati-activityID] 
-					-- component details
-					inner join ProjectDataMart.AgressoTransformation.v_ComponentTransformedCurrent c
-					on c.ComponentID = a.ComponentId
-					-- component titles
-					inner join IATISchema.[title] t
-					on t.[iati-activityID] = a.[iati-activityID]
-					-- funding type lookup
-					inner join (select * from ProjectDataMart.AgressoSourceData.v_AgldimvalueCurrent where client = 'DF' AND attribute_id = '73') d
-					on d.dim_value = c.FundingTypeCode
-					-- aggregated budget
-					inner join (select [iati-activityID], sum(convert(float,[value/text()])) as componentbudget from IATISchema.budget group by [iati-activityID]) b
-					on b.[iati-activityID] = a.[iati-activityID]
-					-- sector comma-separated list
-					inner join
-					(SELECT [iati-activityID],sector = 
-						STUFF((SELECT ', ' + [text()]
-							   FROM IATISchema.sector b 
-							   WHERE b.[iati-activityID] = a.[iati-activityID] 
-							  FOR XML PATH('')), 1, 2, '')
-					FROM IATISchema.sector a
-					GROUP BY [iati-activityID]) s
-					on s.[iati-activityID] = a.[iati-activityID]
-					-- policy marker comma-separated list
+                                 SELECT
+                                         a.[iati-activityID]
+                                         ,null
+                                         ,null
+                                         ,'This activity (' + rtrim(t.[text()]) + ') is a component of ' + rtrim(r.[text()]) + ' reported by DFID'
+                                         + ', with a funding type of ' + '''' + LTRIM(SUBSTRING(d.[description], 6, 99))  + '''' + ' '
+                                         + 'and a budget of £' + LEFT(convert(varchar(50), cast(b.componentbudget as money), -1),LEN(convert(varchar(50), cast(b.componentbudget as money), -1))-3) + '. '
+                                         + CASE 
+                                                WHEN rc.[text()] is not null THEN 'This component benefits ' + rc.[text()] + ', ' 
+                                                WHEN rr.[@code] is not null THEN 'This component benefits ' + clr.[Name] + ', ' 
+                                                ELSE '' 
+                                         END 
+                                         + 'and works in the following sector(s): ' + s.sector + '. '
+                                         + CASE
+                                                WHEN Implementers.imp is not null THEN
+                                                       ', with the following implementing partners: ' + Implementers.imp + '. '
+                                                ELSE ''
+                                         END
+                                         + CASE
+                                                WHEN PlannedStart.[@iso-date] is not null and PlannedEnd.[@iso-date] is not null THEN 
+                                                'The start date is ' + convert(varchar,PlannedStart.[@iso-date],105) + ' and the end date is ' + convert(varchar,PlannedEnd.[@iso-date],105) + '.'
+                                                ELSE ''
+                                         END
+                                         AS ComponentDescription
+                                  from IATISchema.[iati-activity] a
+                                  -- related activity
+                                  inner join (select * from IATISchema.[related-activity] where [@type] = 1) r
+                                  on a.[iati-activityID] = r.[iati-activityID] 
+                                  -- component details
+                                  inner join ProjectDataMart.AgressoTransformation.v_ComponentTransformedCurrent c
+                                  on c.ComponentID = a.ComponentId
+                                  -- component titles
+                                  inner join IATISchema.[title] t
+                                  on t.[iati-activityID] = a.[iati-activityID]
+                                  -- funding type lookup
+                                  inner join (select * from ProjectDataMart.AgressoSourceData.v_AgldimvalueCurrent where client = 'DF' AND attribute_id = '73') d
+                                  on d.dim_value = c.FundingTypeCode
+                                  -- aggregated budget
+                                  inner join (select [iati-activityID], sum(convert(float,[value/text()])) as componentbudget from IATISchema.budget group by [iati-activityID]) b
+                                  on b.[iati-activityID] = a.[iati-activityID]
+                                  -- sector comma-separated list
+                                  inner join
+                                  (SELECT [iati-activityID],sector = 
+                                         STUFF((SELECT ', ' + [text()]
+                                                   FROM IATISchema.sector b 
+                                                   WHERE b.[iati-activityID] = a.[iati-activityID] 
+                                                  FOR XML PATH('')), 1, 2, '')
+                                  FROM IATISchema.sector a
+                                  GROUP BY [iati-activityID]) s
+                                  on s.[iati-activityID] = a.[iati-activityID]
+                                  -- policy marker comma-separated list
 
-					-- recipient country
-					left outer join IATISchema.[recipient-country] rc
-					on rc.[iati-activityID] = a.[iati-activityID]
-					-- recipient region
-					left outer join IATISchema.[recipient-region] rr
-					on rr.[iati-activityID] = a.[iati-activityID]
-					left outer join Codelist.Region clr
-					on clr.Code = rr.[@code]
+                                  -- recipient country
+                                  left outer join IATISchema.[recipient-country] rc
+                                  on rc.[iati-activityID] = a.[iati-activityID]
+                                  -- recipient region
+                                  left outer join IATISchema.[recipient-region] rr
+                                  on rr.[iati-activityID] = a.[iati-activityID]
+                                  left outer join Codelist.Region clr
+                                  on clr.Code = rr.[@code]
 
-					-- dates
-					left outer join (select * from IATISchema.[activity-date] where [@type] = 1) PlannedStart 
-					on PlannedStart.[iati-activityID] = a.[iati-activityID]
-					--left outer join (select * from IATISchema.[activity-date] where [@type] = 2) ActualStart 
-					--on ActualStart.[iati-activityID] = a.[iati-activityID]
-					left outer join (select * from IATISchema.[activity-date] where [@type] = 3) PlannedEnd
-					on PlannedEnd.[iati-activityID] = a.[iati-activityID]
-					--left outer join (select * from IATISchema.[activity-date] where [@type] = 4) ActualEnd
-					--on ActualEnd.[iati-activityID] = a.[iati-activityID]
+                                  -- dates
+                                  left outer join (select * from IATISchema.[activity-date] where [@type] = 1) PlannedStart 
+                                  on PlannedStart.[iati-activityID] = a.[iati-activityID]
+                                  --left outer join (select * from IATISchema.[activity-date] where [@type] = 2) ActualStart 
+                                  --on ActualStart.[iati-activityID] = a.[iati-activityID]
+                                  left outer join (select * from IATISchema.[activity-date] where [@type] = 3) PlannedEnd
+                                  on PlannedEnd.[iati-activityID] = a.[iati-activityID]
+                                  --left outer join (select * from IATISchema.[activity-date] where [@type] = 4) ActualEnd
+                                  --on ActualEnd.[iati-activityID] = a.[iati-activityID]
 
-					-- participating org
-					left outer join
-					(SELECT [iati-activityID],imp = 
-						STUFF((SELECT ', ' + [text()]
-							   FROM IATISchema.[participating-org] b
-							   WHERE b.[iati-activityID] = a.[iati-activityID] 
-							   AND b.[@role] = 4
-							   AND b.[text()] is not null
-							  FOR XML PATH('')), 1, 2, '')
-					FROM IATISchema.[participating-org] a
-					where a.[@role] = 4 and a.[text()] is not null
-					GROUP BY [iati-activityID]) Implementers
-					on Implementers.[iati-activityID] = a.[iati-activityID]
+                                  -- participating org
+                                  left outer join
+                                  (SELECT [iati-activityID],imp = 
+                                         STUFF((SELECT ', ' + [text()]
+                                                   FROM (select  distinct [iati-activityID],[text()] from IATISchema.[participating-org] where [@role] = 4 and [text()] is not null) b
+                                                   WHERE b.[iati-activityID] = a.[iati-activityID] 
+                                                  FOR XML PATH('')), 1, 2, '')
+                                  FROM (select  distinct [iati-activityID],[text()] from IATISchema.[participating-org] where [@role] = 4 and [text()] is not null) a
+                                  GROUP BY [iati-activityID]) Implementers
+                                  on Implementers.[iati-activityID] = a.[iati-activityID]
 
-					where --a.ProjectId like '30%' and -- long query: 1:37 for full dataset
-					a.ComponentId is not null
-	
-	          /* Populate empty Project and Component Descriptions*/
+                                  where --a.ProjectId like '30%' and -- long query: 1:37 for full dataset
+                                  a.ComponentId is not null
+       
+                 /* Populate empty Project and Component Descriptions*/
                      
-				INSERT INTO IATISchema.[description] 
-				SELECT 
-					[title].[iati-activityID]
-					,[title].[@xml:lang]
-					,NULL
-					,'Title: ' + [title].[text()]
-				FROM IATISchema.[title]
-				LEFT OUTER JOIN IATISchema.[description]
-					ON [description].[iati-activityID] = [title].[iati-activityID]
-				WHERE [description].[text()] is null				
+                           INSERT INTO IATISchema.[description] 
+                           SELECT 
+                                  [title].[iati-activityID]
+                                  ,[title].[@xml:lang]
+                                  ,NULL
+                                  ,'Title: ' + [title].[text()]
+                           FROM IATISchema.[title]
+                           LEFT OUTER JOIN IATISchema.[description]
+                                  ON [description].[iati-activityID] = [title].[iati-activityID]
+                           WHERE [description].[text()] is null                          
+
+                  EXECUTE [PublicationControl].p_PrintProgress N'Removal complete'
+
+                 /* Populate tag data at component level*/
+                      /* INSERT INTO [IATISchema].[tag]
+                      (
+                        [iati-activityID]
+                        ,[@code]
+                  ,[@vocabulary]
+                  ,[@vocabulary-uri]
+                  ,[text()]
+                      ) */
+                      /*  Put logic to generate and select data from the raw tables*/
+
+        /* Populate tag data at Project level*/
+                      /* INSERT INTO [IATISchema].[tag]
+                      (
+                        [iati-activityID]
+                        ,[@code]
+                  ,[@vocabulary]
+                  ,[@vocabulary-uri]
+                  ,[text()]
+                      ) */
+                      /*  Put logic to generate and select data from the raw tables*/
 
 
 /* ======================================================================================================================
    FINAL COMMIT. END
    ====================================================================================================================== */
- 
+
 
                      COMMIT TRANSACTION
               END TRY
@@ -3739,4 +2841,7 @@ AS
 
 
 
+
 GO
+
+
